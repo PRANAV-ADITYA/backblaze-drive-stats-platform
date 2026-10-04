@@ -1,0 +1,165 @@
+# Data contract: Backblaze Drive Stats (daily drive snapshots)
+# Every rule below is backed by profiling evidence: see docs/profiling-report.md
+
+contract:
+  name: backblaze_drive_stats_daily
+  version: 1.0.0
+  status: draft            # becomes "active" once the Phase 3 backfill validates it
+  owner: Pranav Aditya
+  description: One row per operational drive per day, from Backblaze's published Drive Stats.
+
+source:
+  provider: Backblaze
+  url: https://www.backblaze.com/cloud-storage/resources/hard-drive-test-data
+  license: Free to use with attribution; the data may not be sold.
+  delivery:
+    format: ZIP containing one CSV per day
+    cadence: quarterly (annual ZIPs for 2013–2015)
+    file_names: ["data_Q{quarter}_{year}.zip", "data_{year}.zip"]
+    first_date: 2013-04-10
+  file_selection:
+    include_pattern: '(\d{4}-\d{2}-\d{2})\.csv$'
+    exclude_paths: ["__MACOSX/"]
+    date_from: file_name          # never from the date column alone
+    rules:
+      - Never rely on file order inside the ZIP
+      - Never rely on folder names inside the ZIP
+      - Record every skipped entry, never hide it
+
+grain: one row per drive per day
+primary_key: [date, serial_number]
+
+columns:
+  - name: date
+    type: date
+    required: true
+    since: 2013-04-10
+    rules: ["taken from the file name; must match the date column"]
+
+  - name: serial_number
+    type: string
+    required: true
+    since: 2013-04-10
+    rules: ["trim spaces", "unique per date"]
+
+  - name: model
+    type: string
+    required: true
+    since: 2013-04-10
+    rules: ["trim spaces", "formats vary (with/without brand): normalise in gold, not here"]
+
+  - name: capacity_bytes
+    type: bigint
+    required: true
+    since: 2013-04-10
+    rules: ["must be > 0", "should not change for the same serial_number"]
+
+  - name: failure
+    type: boolean
+    required: true
+    since: 2013-04-10
+    rules: ["source values '0'/'1' only", "a failed drive should not appear on later days"]
+
+  - name: vault_id
+    type: integer
+    required: false
+    since: 2023-04-01
+
+  - name: pod_id
+    type: integer
+    required: false
+    since: 2023-04-01
+    rules: ["zero-padded in source ('09'); expected range 0–19"]
+
+  - name: is_legacy_format
+    type: boolean
+    required: false
+    since: 2023-04-01
+    rules: ["accept true/false in any capitalisation ('False' in 2023, 'false' in 2026)"]
+
+  - name: datacenter
+    type: string
+    required: false
+    since: 2023-07-01
+    rules: ["can be blank for whole vaults that were busy during collection"]
+
+  - name: cluster_id
+    type: integer
+    required: false
+    since: 2023-07-01
+    rules: ["zero-padded in source ('020')"]
+
+  - name: pod_slot_num
+    type: integer
+    required: false
+    since: 2023-07-01
+    rules:
+      - "zero-padded in source ('0007'); expected range 0–59"
+      - "blank for boot drives (always) and for data drives around their failure day"
+
+smart_columns:
+  name_pattern: '^smart_(\d+)_(normalized|raw)$'
+  types:
+    normalized: integer
+    raw: bigint                    # to be confirmed across all eras in the Phase 3 backfill
+  required: false
+  new_attributes: auto_add         # columns were only ever added in 13 years of history
+
+schema_drift_policy:
+  - change: new column matching the SMART pattern
+    action: auto_add
+  - change: new column NOT matching the SMART pattern
+    action: block_day
+  - change: required column missing
+    action: block_day
+  - change: optional column missing that existed before
+    action: warn
+  - change: columns reordered only
+    action: info                   # we always read by name, so order can't break us
+
+quality_checks:
+  # quarantine_row = set the row aside with a reason, keep the rest
+  # block_day      = don't publish this day until a human looks
+  # warn           = publish, but record and notify
+  - check: value cannot be converted to its contract type
+    action: quarantine_row
+  - check: failure not in {0, 1}
+    action: quarantine_row
+  - check: serial_number empty
+    action: quarantine_row
+  - check: duplicate (date, serial_number) remains after dedupe
+    action: block_day
+  - check: quarantined rows above 0.5% of the day
+    action: block_day
+  - check: row count changes more than 3% vs previous day
+    action: block_day
+  - check: row count changes more than 1% vs previous day
+    action: warn
+  - check: day missing from the expected calendar
+    action: warn                   # recorded as a known gap
+  - check: daily file has no data rows
+    action: warn                   # recorded as a known gap
+  - check: datacenter blank
+    action: warn
+  - check: capacity_bytes or model changes for the same serial_number
+    action: warn
+    escalate:
+      when: more than 50 drives affected in one day
+      action: block_day
+  - check: failed drive appears on a later day
+    action: warn
+    escalate:
+      when: more than 50 drives affected in one day
+      action: block_day
+
+derived_rules:                     # applied in gold, documented here so they live with the data's rules
+  boot_drive:
+    rule: never had a pod_slot_num in the period AND capacity_bytes < 1 TB
+    valid_from: 2023-07-01
+    evidence: Q2 2026 → 3,949 boot drives, 0 failures (Backblaze reported 3,881)
+    open_question: rule for data before 2023-07-01 (no pod_slot_num)
+
+changelog:
+  - version: 1.0.0
+    date: 2026-10-04
+    change: Initial contract from Phase 1 profiling (2013, Q1 2016, Q1–Q3 2023, Q2 2026)

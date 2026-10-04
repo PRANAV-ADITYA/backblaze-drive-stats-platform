@@ -1,8 +1,17 @@
-# Backblaze Drive Stats — Profiling Notes
+# Backblaze Drive Stats — Profiling Report
 
-Samples used: data_2013, data_Q1_2016, data_Q1_2023, data_Q2_2023, data_Q3_2023, data_Q2_2026.
-Reference docs: contracts/reference/Drive_Stats_Schema_Current.csv (dated Q2 2024),
-contracts/reference/Drive_Stats_Schema_2018_Onward.csv (2018 Q1 – 2024 Q1).
+## Summary
+- 13 years of daily drive snapshots; ~32 million rows per quarter today, ~100× more data per day than in 2013
+- Schema grew from 85 to 197 columns; columns were only ever added, but every addition shifted positions → read by name
+- Packaging quirks (macOS junk files, unordered files, varying folder names) → select files by date-named pattern only
+- Identifier columns are zero-padded codes → integers; booleans change capitalisation between eras
+- Quality: no duplicates, failed drives never reappear, very stable daily counts (max change +0.51%)
+- Boot drives must be excluded to match Backblaze's AFR; rule: never had a slot AND under 1 TB
+- Our Q2 2026 AFR: 1.76% vs Backblaze's 1.73% (remaining gap = their extra exclusions)
+
+Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_full_quarter.ipynb`
+
+![Drives per day, Q2 2026](evidence/q2_2026_drives_per_day.png)
 
 ## 1. Size and growth
 - Whole year 2013: 81 MB ZIP. Q2 2026: 1.9 GB ZIP (~12.6 GB uncompressed) → ~100× more data per day
