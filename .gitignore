@@ -216,3 +216,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+
+# --- Project rules ---
+# Local data: datasets never go into Git (they live in S3)
+data/
+
+# Terraform: local working files and state never go into Git
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# macOS system files
+.DS_Store
+
+# Local environment variables (never commit secrets)
+.env
