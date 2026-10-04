@@ -53,12 +53,31 @@ contracts/reference/Drive_Stats_Schema_2018_Onward.csv (2018 Q1 – 2024 Q1).
   Backblaze's 1.73% for Q2 2026)
 - datacenter blank on 2023-07-01 for 6,100 drives = 5 whole vaults × 1,220 drives
   ("busy vault" cause) → fix via vault→datacenter lookup from other days, flagged as filled-in
-- pod_slot_num empty for ~4,000 drives/day = boot drives (250 GB SSDs, Dell BOSS, small 2.5")
+- pod_slot_num empty for (a) boot drives (all their days) and (b) data drives around their failure
+  day → "no slot" alone is NOT a boot-drive signal
 - Model names have inconsistent formats (with/without brand) → needs normalization mapping
 
 ## 7. Hardware layout (inferred, consistent across checks)
 - 20 pods per vault, 60 data slots per pod, 1 boot drive per pod → 1,220 drives per vault
 - 6 datacenters in 2026: phx1, sac0, sac2, iad1, ams5, yyz1
+
+
+## Full quarter scan (Q2 2026: 31,968,003 rows, 91 days)
+- Parquet: 12.58 GB CSV → 0.31 GB Parquet (11 of 197 columns kept), query 16.6 s → ~0 s;
+  conversion took 27 s
+- No duplicate (date, serial_number) on any day; no blank datacenter all quarter
+- Drives per day: 345,143 → 355,284, smooth growth; largest day-to-day change +0.51%
+  → ±15% row-count audit is far too loose; ~±3% block / ±1% warn fits this quarter
+- 1,522 drives failed; none seen again after failing; no drive changed capacity or model
+- Failures per day: 3–42 (mean ~17)
+- pod_slot_num goes blank on/around failure: 69% of failure rows have no slot vs 1.2% of normal rows
+- Boot drive rule, decided per DRIVE (not per row): never had a slot in the period AND capacity < 1 TB
+  → 3,949 boot drives, 0 failures (Backblaze: 3,881)
+- AFR excluding boot drives: 1.76% vs Backblaze 1.73%; remaining gap = Backblaze's extra
+  exclusions (705 HDDs not meeting criteria, small models) → replicate in Phase 4
+- 122 drives ≥1 TB had no slot all quarter; 89 of them failed → strong trouble signal
+- LESSON: a rule tested on one day looked right but was wrong across 91 days; the
+  reconciliation against Backblaze's published AFR exposed it
 
 ## 8. Impact on the design
 - Contract v1: the 11 non-SMART columns above with explicit types; SMART pairs auto-added
