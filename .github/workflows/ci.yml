@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python (lint, format, tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format check
+        run: uv run ruff format --check .
+
+      - name: Tests
+        run: uv run pytest
+
+  terraform:
+    name: Terraform (format, validate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.16.0"
+
+      - name: Format check
+        run: terraform fmt -check -recursive infra/
+
+      - name: Validate bootstrap
+        working-directory: infra/bootstrap
+        run: |
+          terraform init -backend=false
+          terraform validate
