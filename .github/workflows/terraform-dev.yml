@@ -1,0 +1,74 @@
+name: Terraform dev
+
+on:
+  pull_request:
+    paths: ["infra/**", ".github/workflows/terraform-dev.yml"]
+  push:
+    branches: [main]
+    paths: ["infra/**", ".github/workflows/terraform-dev.yml"]
+
+permissions:
+  contents: read
+
+# Only one plan/apply against dev at a time; later runs wait their turn.
+concurrency:
+  group: terraform-dev
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+    working-directory: infra/envs/dev
+
+jobs:
+  plan:
+    name: Plan (dev)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_PLAN_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_PLAN_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-southeast-2
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.16.0"
+          terraform_wrapper: false
+
+      - name: Init
+        run: terraform init -input=false -backend-config="bucket=dsl-tfstate-$(aws sts get-caller-identity --query Account --output text)"
+
+      - name: Plan
+        run: |
+          terraform plan -input=false -no-color | tee plan.txt
+          {
+            echo '## Terraform plan (dev)'
+            echo '```'
+            tail -n 80 plan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  apply:
+    name: Apply (dev)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_APPLY_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_APPLY_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-southeast-2
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "~1.16.0"
+          terraform_wrapper: false
+
+      - name: Init
+        run: terraform init -input=false -backend-config="bucket=dsl-tfstate-$(aws sts get-caller-identity --query Account --output text)"
+
+      - name: Apply
+        run: terraform apply -input=false -no-color -auto-approve
