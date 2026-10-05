@@ -1,0 +1,123 @@
+locals {
+  github_repo = "PRANAV-ADITYA/backblaze-drive-stats-platform"
+}
+
+# AWS's record that tokens signed by GitHub can be trusted.
+resource "aws_iam_openid_connect_provider" "github" {
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+# --- Guest lists (trust policies) ---
+
+# Workflows running for a pull request in this repo.
+data "aws_iam_policy_document" "trust_pull_request" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${local.github_repo}:pull_request"]
+    }
+  }
+}
+
+# Workflows running on the main branch of this repo.
+data "aws_iam_policy_document" "trust_main" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${local.github_repo}:ref:refs/heads/main"]
+    }
+  }
+}
+
+# --- What the roles may do ---
+
+# Read and write dev's Terraform state (state file + lock file).
+data "aws_iam_policy_document" "dev_state" {
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.tfstate.arn]
+  }
+  statement {
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
+    resources = ["${aws_s3_bucket.tfstate.arn}/dev/*"]
+  }
+}
+
+# Manage dev's S3 buckets only. Later phases add more through PRs.
+data "aws_iam_policy_document" "dev_apply" {
+  statement {
+    actions = ["s3:*"]
+    resources = [
+      "arn:aws:s3:::dsl-dev-*",
+      "arn:aws:s3:::dsl-dev-*/*",
+    ]
+  }
+}
+
+# --- Role for pull requests: look, don't touch ---
+
+resource "aws_iam_role" "github_plan" {
+  name               = "dsl-dev-github-plan"
+  assume_role_policy = data.aws_iam_policy_document.trust_pull_request.json
+}
+
+resource "aws_iam_role_policy_attachment" "github_plan_readonly" {
+  role       = aws_iam_role.github_plan.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+resource "aws_iam_role_policy" "github_plan_state" {
+  name   = "dev-terraform-state"
+  role   = aws_iam_role.github_plan.id
+  policy = data.aws_iam_policy_document.dev_state.json
+}
+
+# --- Role for main: change dev ---
+
+resource "aws_iam_role" "github_apply" {
+  name               = "dsl-dev-github-apply"
+  assume_role_policy = data.aws_iam_policy_document.trust_main.json
+}
+
+resource "aws_iam_role_policy" "github_apply_state" {
+  name   = "dev-terraform-state"
+  role   = aws_iam_role.github_apply.id
+  policy = data.aws_iam_policy_document.dev_state.json
+}
+
+resource "aws_iam_role_policy" "github_apply_permissions" {
+  name   = "dev-resources"
+  role   = aws_iam_role.github_apply.id
+  policy = data.aws_iam_policy_document.dev_apply.json
+}
+
+output "github_plan_role_arn" {
+  value = aws_iam_role.github_plan.arn
+}
+
+output "github_apply_role_arn" {
+  value = aws_iam_role.github_apply.arn
+}
