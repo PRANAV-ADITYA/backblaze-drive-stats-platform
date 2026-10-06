@@ -112,7 +112,7 @@ schema_drift_policy:
     action: block_day
   - change: required column missing
     action: block_day
-  - change: optional column missing that existed before
+  - change: optional column missing that existed on an earlier date
     action: warn
   - change: columns reordered only
     action: info                   # we always read by name, so order can't break us
