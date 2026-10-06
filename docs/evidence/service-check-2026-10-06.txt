@@ -1,0 +1,12 @@
+Service check, 2026-10-06T15:26Z, region ap-southeast-2
+PASS  ECR: create/delete repository
+PASS  ECS: create/delete cluster
+PASS  VPC: default VPC exists (for Fargate)
+PASS  CloudWatch Logs: create/delete group
+PASS  SNS: create/delete topic
+PASS  EventBridge Scheduler: create/delete group
+PASS  Glue: create/delete database
+PASS  Glue: create/delete job
+PASS  Athena: run SELECT 1
+PASS  Step Functions: create/delete machine
+PASS  S3: store object as Glacier Instant Retrieval
