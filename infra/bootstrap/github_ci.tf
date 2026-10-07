@@ -103,3 +103,20 @@ resource "aws_iam_user_policy" "github_apply_catalog" {
   user   = aws_iam_user.github_apply.name
   policy = data.aws_iam_policy_document.dev_apply_catalog.json
 }
+
+# --- Image repository permissions for the apply user (Step 2.7) ---
+# Lets CI create and configure dev's ECR repositories, named dsl-dev-*.
+
+data "aws_iam_policy_document" "dev_apply_ecr" {
+  statement {
+    sid       = "EcrRepositoriesDev"
+    actions   = ["ecr:*"]
+    resources = ["arn:aws:ecr:${local.ci_region}:${local.ci_account}:repository/dsl-dev-*"]
+  }
+}
+
+resource "aws_iam_user_policy" "github_apply_ecr" {
+  name   = "dev-ecr"
+  user   = aws_iam_user.github_apply.name
+  policy = data.aws_iam_policy_document.dev_apply_ecr.json
+}
