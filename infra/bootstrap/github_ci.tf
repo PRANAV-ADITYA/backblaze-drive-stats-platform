@@ -70,3 +70,36 @@ output "github_plan_user" {
 output "github_apply_user" {
   value = aws_iam_user.github_apply.name
 }
+
+# --- Catalog and query permissions for the apply user (Step 2.6b) ---
+# Lets CI create dev's Glue Data Catalog tables and Athena workgroup,
+# and nothing outside names starting with dsl_dev_ / dsl-dev-.
+
+locals {
+  ci_region  = "ap-southeast-2"
+  ci_account = data.aws_caller_identity.current.account_id
+}
+
+data "aws_iam_policy_document" "dev_apply_catalog" {
+  statement {
+    sid     = "GlueCatalogDev"
+    actions = ["glue:*"]
+    resources = [
+      "arn:aws:glue:${local.ci_region}:${local.ci_account}:catalog",
+      "arn:aws:glue:${local.ci_region}:${local.ci_account}:database/dsl_dev_*",
+      "arn:aws:glue:${local.ci_region}:${local.ci_account}:table/dsl_dev_*/*",
+    ]
+  }
+
+  statement {
+    sid       = "AthenaWorkgroupDev"
+    actions   = ["athena:*"]
+    resources = ["arn:aws:athena:${local.ci_region}:${local.ci_account}:workgroup/dsl-dev-*"]
+  }
+}
+
+resource "aws_iam_user_policy" "github_apply_catalog" {
+  name   = "dev-catalog"
+  user   = aws_iam_user.github_apply.name
+  policy = data.aws_iam_policy_document.dev_apply_catalog.json
+}
