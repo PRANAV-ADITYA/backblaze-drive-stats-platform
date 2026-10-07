@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.43.108",
     "httpx>=0.28.1",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -16,7 +17,6 @@ dev = [
     "moto[s3]>=5.2.3",
     "pandas>=3.0.6",
     "pytest>=9.1.1",
-    "pyyaml>=6.0.3",
     "ruff>=0.16.10",
 ]
 
