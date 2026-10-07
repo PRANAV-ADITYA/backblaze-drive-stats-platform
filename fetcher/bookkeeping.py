@@ -19,6 +19,8 @@ import boto3
 from fetcher.extract import MANIFEST_PREFIX, check_header, load_contract, manifest_key
 from fetcher.raw_store import SOURCE_PREFIX, ZIP_PREFIX
 
+OPS_PREFIX = "ops/"
+
 
 class BookkeepingError(Exception):
     """Raised when raw and bronze disagree in a way that would corrupt later steps."""
@@ -172,18 +174,39 @@ def build_tables(
     return {"source_files": source_files, "bronze_days": bronze_days}
 
 
+def to_jsonl(rows: list[dict]) -> str:
+    """One JSON object per line: the format Athena reads."""
+    return "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows)
+
+
+def table_key(name: str) -> str:
+    """Each table gets its own folder, because Athena treats a folder as a table."""
+    return f"{OPS_PREFIX}{name}/{name}.jsonl"
+
+
 def write_tables(tables: dict[str, list], out_dir: Path) -> None:
-    """One file per table, one JSON object per line (the format Athena reads)."""
+    """Save each table as a local file, to look at."""
     out_dir.mkdir(parents=True, exist_ok=True)
     for name, rows in tables.items():
-        lines = [json.dumps(row, sort_keys=True) for row in rows]
-        (out_dir / f"{name}.jsonl").write_text("".join(line + "\n" for line in lines))
+        (out_dir / f"{name}.jsonl").write_text(to_jsonl(rows))
+
+
+def upload_tables(s3, ops_bucket: str, tables: dict[str, list]) -> None:
+    """Replace each table's file in S3. A rebuild overwrites; it never adds a second file."""
+    for name, rows in tables.items():
+        s3.put_object(
+            Bucket=ops_bucket,
+            Key=table_key(name),
+            Body=to_jsonl(rows).encode(),
+            ContentType="application/x-ndjson",
+        )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--raw-bucket", default=os.environ.get("RAW_BUCKET"))
     parser.add_argument("--bronze-bucket", default=os.environ.get("BRONZE_BUCKET"))
+    parser.add_argument("--ops-bucket", default=os.environ.get("OPS_BUCKET"))
     parser.add_argument("--out-dir", default="data/ops", type=Path)
     args = parser.parse_args()
     if not args.raw_bucket or not args.bronze_bucket:
@@ -191,10 +214,11 @@ def main() -> None:
             "set --raw-bucket and --bronze-bucket (or RAW_BUCKET, BRONZE_BUCKET)"
         )
 
-    tables = build_tables(
-        boto3.client("s3"), args.raw_bucket, args.bronze_bucket, load_contract()
-    )
+    s3 = boto3.client("s3")
+    tables = build_tables(s3, args.raw_bucket, args.bronze_bucket, load_contract())
     write_tables(tables, args.out_dir)
+    if args.ops_bucket:
+        upload_tables(s3, args.ops_bucket, tables)
 
     sources, days = tables["source_files"], tables["bronze_days"]
     now = [d for d in days if d["is_current"]]
@@ -211,6 +235,10 @@ def main() -> None:
     print(f"  by status: {dict(Counter(d['status'] for d in now))}")
     print(f"  by change: {dict(Counter(d['change'] for d in now))}")
     print(f"  ready for silver: {sum(d['status'] == 'ok' for d in now)}")
+    if args.ops_bucket:
+        print(f"uploaded: s3://{args.ops_bucket}/{OPS_PREFIX}")
+    else:
+        print("not uploaded: set --ops-bucket or OPS_BUCKET to publish the tables")
 
 
 if __name__ == "__main__":

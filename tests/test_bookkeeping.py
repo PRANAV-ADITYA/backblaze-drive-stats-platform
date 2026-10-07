@@ -195,3 +195,31 @@ def test_tables_are_written_one_json_object_per_line(s3, tmp_path):
     assert (
         out / "bronze_days.jsonl"
     ).read_text() == first_run  # a rebuild changes nothing
+
+
+def test_tables_are_uploaded_one_folder_per_table(s3, tmp_path):
+    from fetcher.bookkeeping import upload_tables
+
+    lake = "dsl-test-lake"
+    s3.create_bucket(
+        Bucket=lake,
+        CreateBucketConfiguration={"LocationConstraint": "ap-southeast-2"},
+    )
+    fetch(
+        s3, tmp_path, {"2016-04-01": day("2016-04-01"), "2016-04-02": day("2016-04-02")}
+    )
+    extract(s3, tmp_path)
+
+    upload_tables(s3, lake, tables(s3))
+    upload_tables(s3, lake, tables(s3))  # a rebuild replaces the files
+
+    keys = sorted(o["Key"] for o in s3.list_objects_v2(Bucket=lake)["Contents"])
+    assert keys == [
+        "ops/bronze_days/bronze_days.jsonl",
+        "ops/source_files/source_files.jsonl",
+    ]
+    body = s3.get_object(Bucket=lake, Key=keys[0])["Body"].read().decode()
+    assert [json.loads(line)["date"] for line in body.splitlines()] == [
+        "2016-04-01",
+        "2016-04-02",
+    ]
