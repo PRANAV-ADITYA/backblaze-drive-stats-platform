@@ -120,3 +120,63 @@ resource "aws_iam_user_policy" "github_apply_ecr" {
   user   = aws_iam_user.github_apply.name
   policy = data.aws_iam_policy_document.dev_apply_ecr.json
 }
+
+# --- Fargate task permissions for the apply user (Step 2.7) ---
+# A managed policy, because a user's inline policies share a small size limit.
+
+data "aws_iam_policy_document" "dev_apply_fargate" {
+  statement {
+    sid     = "EcsDevResources"
+    actions = ["ecs:*"]
+    resources = [
+      "arn:aws:ecs:${local.ci_region}:${local.ci_account}:cluster/dsl-dev-*",
+      "arn:aws:ecs:${local.ci_region}:${local.ci_account}:task-definition/dsl-dev-*:*",
+    ]
+  }
+
+  # AWS doesn't allow these four actions to be limited to named resources.
+  statement {
+    sid = "EcsTaskDefinitions"
+    actions = [
+      "ecs:RegisterTaskDefinition",
+      "ecs:DeregisterTaskDefinition",
+      "ecs:DescribeTaskDefinition",
+      "ecs:ListTaskDefinitions",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid       = "LogGroupsDev"
+    actions   = ["logs:*"]
+    resources = ["arn:aws:logs:${local.ci_region}:${local.ci_account}:log-group:/dsl-dev/*"]
+  }
+
+  statement {
+    sid       = "FindLogGroups"
+    actions   = ["logs:DescribeLogGroups"]
+    resources = ["*"]
+  }
+
+  # CI may hand these two roles to an ECS task. It cannot create or change roles.
+  statement {
+    sid       = "PassFetcherRolesToEcs"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.fetcher_execution.arn, aws_iam_role.fetcher_task.arn]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+      values   = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_policy" "github_apply_fargate" {
+  name   = "dsl-dev-github-apply-fargate"
+  policy = data.aws_iam_policy_document.dev_apply_fargate.json
+}
+
+resource "aws_iam_user_policy_attachment" "github_apply_fargate" {
+  user       = aws_iam_user.github_apply.name
+  policy_arn = aws_iam_policy.github_apply_fargate.arn
+}
