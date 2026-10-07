@@ -2,7 +2,9 @@
 name = "backblaze-drive-stats-platform"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+]
 
 [dependency-groups]
 dev = [
@@ -21,3 +23,4 @@ extend-exclude = ["exploration"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
