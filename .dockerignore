@@ -1,0 +1,7 @@
+# Send only what the image needs. Everything else (data/, .venv/, .git/) stays out.
+*
+!pyproject.toml
+!uv.lock
+!fetcher/
+!contracts/
+**/__pycache__
