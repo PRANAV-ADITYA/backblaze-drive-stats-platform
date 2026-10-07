@@ -3,14 +3,17 @@ name = "backblaze-drive-stats-platform"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "boto3>=1.43.108",
     "httpx>=0.28.1",
 ]
 
 [dependency-groups]
 dev = [
+    "botocore[crt]>=1.43.108",
     "duckdb>=1.5.6",
     "ipykernel>=7.4.0",
     "matplotlib>=3.11.2",
+    "moto[s3]>=5.2.3",
     "pandas>=3.0.6",
     "pytest>=9.1.1",
     "pyyaml>=6.0.3",
