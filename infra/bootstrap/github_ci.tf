@@ -134,10 +134,11 @@ data "aws_iam_policy_document" "dev_apply_fargate" {
     ]
   }
 
-  # AWS doesn't allow these four actions to be limited to named resources.
+  # AWS doesn't allow these actions to be limited to named resources.
   statement {
-    sid = "EcsTaskDefinitions"
+    sid = "EcsActionsWithoutNameFilter"
     actions = [
+      "ecs:CreateCluster",
       "ecs:RegisterTaskDefinition",
       "ecs:DeregisterTaskDefinition",
       "ecs:DescribeTaskDefinition",
