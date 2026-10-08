@@ -223,3 +223,13 @@ def test_tables_are_uploaded_one_folder_per_table(s3, tmp_path):
         "2016-04-01",
         "2016-04-02",
     ]
+
+
+def test_line_ending_warnings_survive_the_rebuild(s3, tmp_path):
+    fetch(s3, tmp_path, {"2016-04-01": day("2016-04-01").replace("\n", "\r")})
+    extract(s3, tmp_path)
+
+    (row,) = tables(s3)["bronze_days"]
+
+    assert row["status"] == "ok"
+    assert row["warnings"] == ["unusual line endings: cr"]

@@ -123,6 +123,8 @@ def build_bronze_days(
                 blocks, warnings = check_header(
                     columns, date.fromisoformat(day["date"]), contract
                 )
+                # Keep the extractor's findings about the file itself, such as line endings.
+                warnings = warnings + day.get("file_warnings", [])
                 status = "blocked" if blocks else "ok"
 
             if not is_current:

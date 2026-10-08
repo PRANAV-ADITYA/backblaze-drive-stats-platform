@@ -187,3 +187,48 @@ def test_expected_dates_come_from_the_zip_name():
     assert min(expected_dates("data_2013.zip", first)) == date(2013, 4, 10)
     assert len(expected_dates("data_2013.zip", first)) == 266
     assert expected_dates("something_else.zip", first) is None
+
+
+# The examples below are modelled on real files from Backblaze's Q1 2018 ZIP.
+@pytest.mark.parametrize(
+    ("text", "rows", "endings"),
+    [
+        (HEADER + "\n" + "a\n" * 3, 3, "lf"),
+        (HEADER + "\r\n" + "a\r\n" * 3, 3, "crlf"),
+        (HEADER + "\r" + "a\r" * 3, 3, "cr"),
+        (HEADER + "\n" + "a\n" + "a\rb\n", 3, "mixed"),
+        (HEADER + "\n" + "a\n" * 2 + "a", 3, "lf"),
+        ("", 0, "none"),
+    ],
+)
+def test_write_day_reads_every_line_ending_style(
+    tmp_path, monkeypatch, text, rows, endings
+):
+    from fetcher import extract
+
+    # Tiny reads, so a \r\n pair gets split across two of them.
+    monkeypatch.setattr(extract, "CHUNK_SIZE", 4)
+    path = tmp_path / "day.zip"
+    with zipfile.ZipFile(path, "w") as zf:
+        zf.writestr("2018-02-25.csv", text)
+
+    with zipfile.ZipFile(path) as zf:
+        header, got_rows, _, size, got_endings = extract.write_day(
+            zf, "2018-02-25.csv", tmp_path / "day.csv.gz"
+        )
+
+    assert header == (HEADER.encode() if text else b"")
+    assert (got_rows, got_endings, size) == (rows, endings, len(text))
+    assert gzip.decompress((tmp_path / "day.csv.gz").read_bytes()) == text.encode()
+
+
+def test_old_mac_line_endings_are_read_and_flagged(s3, tmp_path):
+    put_raw_zip(
+        s3, tmp_path, {"2016-04-01.csv": csv_text("2016-04-01").replace("\n", "\r")}
+    )
+
+    _, manifest = run(s3, tmp_path)
+
+    day = manifest["days"][0]
+    assert (day["status"], day["row_count"], day["line_endings"]) == ("ok", 3, "cr")
+    assert day["warnings"] == ["unusual line endings: cr"]

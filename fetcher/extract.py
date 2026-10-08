@@ -113,15 +113,31 @@ def check_header(
     return blocks, warnings
 
 
+# A line ends with \r\n (Windows), \r (old Mac) or \n (everything else).
+LINE_BREAK = re.compile(rb"\r\n|\r|\n")
+
+
+def line_ending_label(crlf: int, cr: int, lf: int) -> str:
+    """Name the line-ending style found in a file: lf, crlf, cr, mixed or none."""
+    kinds = [name for name, count in (("crlf", crlf), ("cr", cr), ("lf", lf)) if count]
+    if not kinds:
+        return "none"
+    return kinds[0] if len(kinds) == 1 else "mixed"
+
+
 def write_day(
     zf: zipfile.ZipFile, member: str, dest: Path
-) -> tuple[bytes, int, str, int]:
+) -> tuple[bytes, int, str, int, str]:
     """Copy one CSV out of the ZIP into a gzip file, unchanged.
 
-    Returns (header line, data rows, sha256 of the CSV, CSV size in bytes).
+    Any of the three line-ending styles counts as the end of a line.
+    Returns (header line, data rows, sha256 of the CSV, CSV size in bytes, line endings).
     """
     h = hashlib.sha256()
-    size = newlines = 0
+    size = crlf = cr = lf = 0
+    header: bytes | None = None
+    start = b""  # the file's first bytes, kept until the first line is complete
+    carry = b""  # a \r at the end of a chunk may be the first half of \r\n
     last = b""
     # mtime=0 and no file name inside the gzip: the same CSV always gives the same bytes.
     with (
@@ -129,17 +145,37 @@ def write_day(
         dest.open("wb") as raw,
         gzip.GzipFile(filename="", fileobj=raw, mode="wb", mtime=0) as out,
     ):
-        header = src.readline()
-        chunk = header
-        while chunk:
+        while chunk := src.read(CHUNK_SIZE):
+            if header is None:
+                start += chunk
+                first_line, *rest = LINE_BREAK.split(start, maxsplit=1)
+                if rest:
+                    header = first_line
             h.update(chunk)
             out.write(chunk)
             size += len(chunk)
-            newlines += chunk.count(b"\n")
             last = chunk[-1:]
-            chunk = src.read(CHUNK_SIZE)
-    lines = newlines + (1 if size and last != b"\n" else 0)
-    return header, max(lines - 1, 0), h.hexdigest(), size
+
+            text = carry + chunk
+            carry = b"\r" if text.endswith(b"\r") else b""
+            if carry:
+                text = text[:-1]
+            pairs = text.count(b"\r\n")
+            crlf += pairs
+            cr += text.count(b"\r") - pairs
+            lf += text.count(b"\n") - pairs
+    cr += len(carry)  # a \r at the very end of the file stands alone
+    if header is None:  # the file never ended its first line
+        header = start
+
+    lines = crlf + cr + lf + (1 if size and last not in (b"\r", b"\n") else 0)
+    return (
+        header,
+        max(lines - 1, 0),
+        h.hexdigest(),
+        size,
+        line_ending_label(crlf, cr, lf),
+    )
 
 
 def extract_zip(
@@ -159,17 +195,26 @@ def extract_zip(
             tmp = zip_path.with_name(f"{day}.csv.gz")
             key = day_key(day, source_sha256)
             try:
-                header, rows, day_sha256, size = write_day(zf, members[day], tmp)
+                header, rows, day_sha256, size, line_endings = write_day(
+                    zf, members[day], tmp
+                )
                 s3.upload_file(str(tmp), bronze_bucket, key)
             finally:
                 tmp.unlink(missing_ok=True)
 
             columns = parse_header(header)
+            # Old-Mac or mixed line endings can trip up later readers: flag them.
+            file_warnings = (
+                [f"unusual line endings: {line_endings}"]
+                if line_endings in ("cr", "mixed")
+                else []
+            )
             if rows == 0:
                 status, blocks, warnings = "empty", [], ["daily file has no data rows"]
             else:
                 blocks, warnings = check_header(columns, day, contract)
                 status = "blocked" if blocks else "ok"
+            warnings = warnings + file_warnings
             headers.setdefault(fingerprint(columns), columns)
             days.append(
                 {
@@ -177,6 +222,8 @@ def extract_zip(
                     "status": status,
                     "blocks": blocks,
                     "warnings": warnings,
+                    "file_warnings": file_warnings,
+                    "line_endings": line_endings,
                     "row_count": rows,
                     "csv_bytes": size,
                     "day_sha256": day_sha256,
