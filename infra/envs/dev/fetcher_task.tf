@@ -2,7 +2,7 @@
 
 locals {
   # Which image runs. Change this, through a PR, to release a new version.
-  fetcher_image_tag = "b0c7907"
+  fetcher_image_tag = "0794163"
 
   # The roles are created in bootstrap; here we only refer to them by name.
   fetcher_execution_role_arn = "arn:aws:iam::${local.suffix}:role/dsl-dev-fetcher-execution"
