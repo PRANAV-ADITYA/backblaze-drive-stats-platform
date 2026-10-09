@@ -133,3 +133,25 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
   Measure the whole file before calling something an anomaly
 - RULE: an unusual file is stored and flagged, never dropped; empty days are recorded,
   and what silver does with them is decided in the contract (Step 3.1)
+
+## 11. Row counts across 13 years (Step 3.1)
+- Method: each day compared with the median of the last 7 normal days (empty and partial days left out)
+- Ordinary days: 4,701 of 4,744 normal days moved less than ±3% from the median; 4,176 moved less than ±1%
+- Partial days (below 95% of the median): 82 days in 16 events; nothing sits between −3% and −5%,
+  so the 95% cut-off falls in a natural gap
+- Biggest event: 2013-08-20 to 2013-10-14 (56 days), only 315–900 rows a day instead of ~24,000
+  - Same drives, not reported: 100% of the 315 drives on 2013-08-20 existed the day before;
+    the top model had 4,717 drives on 2013-08-19 and exactly 4,717 on 2013-10-15
+  - Whole servers missing: 315 = 7 × 45 and 900 = 20 × 45 (pods of that era held 45 drives)
+  - New 4 TB pods kept reporting during the gap (ST4000DM000 grew to 668)
+  - 14 failures on 2013-10-15, the day collection resumed: likely failures from the gap recorded late
+    → treat Q3 2013 AFR with care in Phase 4
+  - Backblaze's documentation doesn't mention it; their 10-year retrospective calls 2013 collection
+    an experiment run by Python scripts, which fits but is not confirmed
+- Smaller partial events recover the next day or within a few days (e.g. 2015-10-28, 2016-06-24 to 06-28)
+- Real growth: 43 days more than 3% above the median, at most +5.10%; each lasts 2–4 days until the median catches up
+- The v1.0 rule (block above 3% vs the previous day) would have blocked 47 days, mostly recovery days
+  after a partial day and real growth days
+- Backblaze started collecting boot-drive data in Q4 2013 (input for the Phase 4 boot-drive rule)
+- RULE (contract 1.1.0): row-count checks warn and label partial days, never block; blocking is kept
+  for our own problems (lost rows, duplicates, too many quarantined rows)
