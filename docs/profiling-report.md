@@ -155,3 +155,18 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
 - Backblaze started collecting boot-drive data in Q4 2013 (input for the Phase 4 boot-drive rule)
 - RULE (contract 1.1.0): row-count checks warn and label partial days, never block; blocking is kept
   for our own problems (lost rows, duplicates, too many quarantined rows)
+
+## 12. Spreadsheet-edited files and a quarantined failure (Step 3.3)
+- 2018-02-25 and 2019-06-17 were saved through Excel: old-Mac line endings, dates written M/D/YY,
+  large numbers rounded to 6 digits in scientific notation (e.g. capacity 4.00079E+12 instead of 4000787030016)
+- 2018-02-25: 114,120 rounded values in 6 columns (every capacity); 2019-06-17: 58,779 in 7 SMART columns
+- The day before each is clean, and serial numbers match it (100.00%, 99.95%): no row lost its identity
+- RULE (contract 1.1.1): numbers in scientific notation are unreadable → blank + warn, never approximated;
+  gold fills capacity from the same drive's other days
+- One row in 2019-06-17 is dated 6/15/19: drive ZCH0CJC3, failure = 1, power-on hours 20,788,
+  but the same drive shows 11,147 and 11,179 hours with failure = 0 on 6/15 and 6/16
+  → date and odometer are wrong: silver quarantines the row ("date differs from the file name")
+  → the drive is absent from 2019-06-18 on, so the failure itself is probably real (around 2019-06-17)
+  → Phase 4: decide whether gold counts quarantined failures of drives that then disappear;
+    check against Backblaze's published Q2 2019 figures
+- Sample run (7 days, 1,043,823 rows): 1 row quarantined; warning counts match the profiling counts exactly
