@@ -3,7 +3,7 @@
 
 contract:
   name: backblaze_drive_stats_daily
-  version: 1.0.2
+  version: 1.1.0
   status: draft            # becomes "active" once the Phase 3 backfill validates it
   owner: Pranav Aditya
   description: One row per operational drive per day, from Backblaze's published Drive Stats.
@@ -29,12 +29,20 @@ source:
 grain: one row per drive per day
 primary_key: [date, serial_number]
 
+row_rules:
+  core_columns: [date, serial_number, failure]          # broken: quarantine the row
+  detail_columns: every other column, SMART included    # broken: blank or keep the value, and warn
+  reason: a row is useful as long as we know which drive, which day and whether it failed; that is what AFR needs
+
 columns:
   - name: date
     type: date
     required: true
     since: 2013-04-10
-    rules: ["taken from the file name; must match the date column"]
+    rules:
+      - "silver takes the date from the file name"
+      - "the date column is a cross-check; accepted formats YYYY-MM-DD and M/D/YY (2018-02-25 is written 2/25/18)"
+      - "unreadable, or a different day from the file name: quarantine the row"
 
   - name: serial_number
     type: string
@@ -46,13 +54,18 @@ columns:
     type: string
     required: true
     since: 2013-04-10
-    rules: ["trim spaces", "formats vary (with/without brand): normalise in gold, not here"]
+    rules:
+      - "trim spaces"
+      - "formats vary (with/without brand): normalise in gold, not here"
+      - "blank: keep the row and warn; gold fills it from the same serial_number's other days"
 
   - name: capacity_bytes
     type: bigint
     required: true
     since: 2013-04-10
-    rules: ["must be > 0", "should not change for the same serial_number"]
+    rules:
+      - "must be > 0; zero, negative (sentinels such as -1) or unreadable: store null and warn"
+      - "should not change for the same serial_number; gold fills nulls from the same drive's other days"
 
   - name: failure
     type: boolean
@@ -69,7 +82,9 @@ columns:
     type: integer
     required: false
     since: 2023-04-01
-    rules: ["zero-padded in source ('09'); expected range 0–19"]
+    rules:
+      - "zero-padded in source ('09'); expected range 0–19"
+      - "outside the range: keep the value and warn (the range is observed, not a spec)"
 
   - name: is_legacy_format
     type: boolean
@@ -95,6 +110,7 @@ columns:
     since: 2023-07-01
     rules:
       - "zero-padded in source ('0007'); expected range 0–59"
+      - "outside the range: keep the value and warn (the range is observed, not a spec)"
       - "blank for boot drives (always) and for data drives around their failure day"
 
 smart_columns:
@@ -121,19 +137,28 @@ quality_checks:
   # quarantine_row = set the row aside with a reason, keep the rest
   # block_day      = don't publish this day until a human looks
   # warn           = publish, but record and notify
-  - check: value cannot be converted to its contract type
+  # Block only for problems we can fix ourselves. Backblaze's own gaps and hiccups are recorded, never blocked.
+  - check: serial_number empty
     action: quarantine_row
   - check: failure not in {0, 1}
     action: quarantine_row
-  - check: serial_number empty
+  - check: date column unreadable, or a different day from the file name
     action: quarantine_row
+  - check: a detail column has an impossible or unreadable value
+    action: warn
+    set_value: null                # keep the row, blank only that value
+  - check: a detail column is outside its expected range
+    action: warn                   # keep the value; the range is observed, not a spec
+  - check: silver rows + quarantined rows differ from the bronze row count
+    action: block_day              # rows lost by our own pipeline
   - check: duplicate (date, serial_number) remains after dedupe
     action: block_day
   - check: quarantined rows above 0.5% of the day
     action: block_day
-  - check: row count changes more than 3% vs previous day
-    action: block_day
-  - check: row count changes more than 1% vs previous day
+  - check: row count below 95% of the baseline
+    action: warn
+    label: partial                 # Backblaze missed part of the fleet; gold can leave the day out of AFR
+  - check: row count more than 3% above or below the baseline
     action: warn
   - check: day missing from the expected calendar
     action: warn                   # recorded as a known gap
@@ -152,6 +177,12 @@ quality_checks:
       when: more than 50 drives affected in one day
       action: block_day
 
+row_count_baseline:
+  method: median of the last 7 normal days before this day
+  normal_day: has data rows and is not labelled partial   # empty, missing and partial days never count
+  first_days: use as many earlier normal days as exist; the first day of history is not checked
+  evidence: 13 years in bronze gave 82 partial days (16 events, incl. 2013-08-20 to 2013-10-14), 43 warnings, 0 blocks
+
 derived_rules:                     # applied in gold, documented here so they live with the data's rules
   boot_drive:
     rule: never had a pod_slot_num in the period AND capacity_bytes < 1 TB
@@ -169,3 +200,11 @@ changelog:
   - version: 1.0.2
     date: 2026-10-07
     change: File pattern anchored to the start of the file name, so "._" junk files outside __MACOSX/ are skipped
+  - version: 1.1.0
+    date: 2026-10-09
+    change: >-
+      Step 3.1 decisions, measured on 13 years in bronze. Row count is compared with the median of the
+      last 7 normal days: below 95% is a partial day (warn + label), beyond ±3% warns, neither blocks.
+      Empty and missing days are known gaps. Blocking is kept for our own problems (lost rows, duplicates,
+      too many quarantined rows). Core columns (date, serial_number, failure) quarantine the row; detail
+      columns are blanked or kept with a warning. The date column also accepts M/D/YY.
