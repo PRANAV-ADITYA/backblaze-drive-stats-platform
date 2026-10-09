@@ -3,7 +3,7 @@
 
 contract:
   name: backblaze_drive_stats_daily
-  version: 1.1.1
+  version: 1.2.0
   status: draft            # becomes "active" once the Phase 3 backfill validates it
   owner: Pranav Aditya
   description: One row per operational drive per day, from Backblaze's published Drive Stats.
@@ -163,8 +163,13 @@ quality_checks:
     action: warn                   # keep the value; the range is observed, not a spec
   - check: silver rows + quarantined rows differ from the bronze row count
     action: block_day              # rows lost by our own pipeline
-  - check: duplicate (date, serial_number) remains after dedupe
-    action: block_day
+  - check: exact duplicate (same drive, same day, every value the same)
+    action: warn                   # keep one copy
+  - check: conflicting duplicate (same drive, same day, different values)
+    action: quarantine_row         # every copy; silver never guesses which one is true
+    escalate:
+      when: more than 50 drives affected in one day
+      action: block_day            # that many conflicts means the whole file is suspect
   - check: quarantined rows above 0.5% of the day
     action: block_day
   - check: row count below 95% of the baseline
@@ -226,3 +231,9 @@ changelog:
       Rules made machine-readable for silver (date formats, warn_if_blank, min, expected_range).
       Numbers in scientific notation count as unreadable: 2018-02-25 and 2019-06-17 were saved
       through Excel, which rounded large values; silver blanks them instead of approximating.
+  - version: 1.2.0
+    date: 2026-10-09
+    change: >-
+      Duplicates: exact copies keep one and warn; conflicting copies of a drive on a day are all
+      quarantined (no guessing), and more than 50 such drives in one day blocks the day.
+      None found in 9 sample days (1.27 M drive-days); the full backfill counts all 13 years.
