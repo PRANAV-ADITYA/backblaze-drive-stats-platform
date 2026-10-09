@@ -3,7 +3,7 @@
 
 contract:
   name: backblaze_drive_stats_daily
-  version: 1.1.0
+  version: 1.1.1
   status: draft            # becomes "active" once the Phase 3 backfill validates it
   owner: Pranav Aditya
   description: One row per operational drive per day, from Backblaze's published Drive Stats.
@@ -33,6 +33,7 @@ row_rules:
   core_columns: [date, serial_number, failure]          # broken: quarantine the row
   detail_columns: every other column, SMART included    # broken: blank or keep the value, and warn
   reason: a row is useful as long as we know which drive, which day and whether it failed; that is what AFR needs
+  numbers: written in full only; scientific notation (spreadsheet rounding, e.g. 4.00079E+12) is unreadable
 
 columns:
   - name: date
@@ -43,6 +44,11 @@ columns:
       - "silver takes the date from the file name"
       - "the date column is a cross-check; accepted formats YYYY-MM-DD and M/D/YY (2018-02-25 is written 2/25/18)"
       - "unreadable, or a different day from the file name: quarantine the row"
+    formats:                       # silver reads the date column with whichever it looks like
+      - pattern: "yyyy-MM-dd"
+        looks_like: '^\d{4}-\d{2}-\d{2}$'
+      - pattern: "M/d/yy"            # 2018-02-25 and 2019-06-17, saved through Excel
+        looks_like: '^\d{1,2}/\d{1,2}/\d{2}$'
 
   - name: serial_number
     type: string
@@ -58,6 +64,7 @@ columns:
       - "trim spaces"
       - "formats vary (with/without brand): normalise in gold, not here"
       - "blank: keep the row and warn; gold fills it from the same serial_number's other days"
+    warn_if_blank: true
 
   - name: capacity_bytes
     type: bigint
@@ -66,6 +73,8 @@ columns:
     rules:
       - "must be > 0; zero, negative (sentinels such as -1) or unreadable: store null and warn"
       - "should not change for the same serial_number; gold fills nulls from the same drive's other days"
+    warn_if_blank: true
+    min: 1                         # below this is impossible: blank + warn
 
   - name: failure
     type: boolean
@@ -85,6 +94,7 @@ columns:
     rules:
       - "zero-padded in source ('09'); expected range 0–19"
       - "outside the range: keep the value and warn (the range is observed, not a spec)"
+    expected_range: [0, 19]          # outside: keep + warn
 
   - name: is_legacy_format
     type: boolean
@@ -97,6 +107,7 @@ columns:
     required: false
     since: 2023-07-01
     rules: ["can be blank for whole vaults that were busy during collection"]
+    warn_if_blank: true
 
   - name: cluster_id
     type: integer
@@ -112,6 +123,7 @@ columns:
       - "zero-padded in source ('0007'); expected range 0–59"
       - "outside the range: keep the value and warn (the range is observed, not a spec)"
       - "blank for boot drives (always) and for data drives around their failure day"
+    expected_range: [0, 59]          # outside: keep + warn
 
 smart_columns:
   name_pattern: '^smart_(\d+)_(normalized|raw)$'
@@ -208,3 +220,9 @@ changelog:
       Empty and missing days are known gaps. Blocking is kept for our own problems (lost rows, duplicates,
       too many quarantined rows). Core columns (date, serial_number, failure) quarantine the row; detail
       columns are blanked or kept with a warning. The date column also accepts M/D/YY.
+  - version: 1.1.1
+    date: 2026-10-09
+    change: >-
+      Rules made machine-readable for silver (date formats, warn_if_blank, min, expected_range).
+      Numbers in scientific notation count as unreadable: 2018-02-25 and 2019-06-17 were saved
+      through Excel, which rounded large values; silver blanks them instead of approximating.
