@@ -2,6 +2,7 @@
 
 ## Summary
 - 13 years of daily drive snapshots; ~32 million rows per quarter today, ~100× more data per day than in 2013
+- Full history in bronze: 45 ZIPs, 4,830 days, 744,525,690 rows, no missing days
 - Schema grew from 85 to 197 columns; columns were only ever added, but every addition shifted positions → read by name
 - Packaging quirks (macOS junk files, unordered files, varying folder names) → select files by date-named pattern only
 - Identifier columns are zero-padded codes → integers; booleans change capitalisation between eras
@@ -27,9 +28,9 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
   names or file order; record skipped entries
 
 ## 3. Completeness
-- Every quarterly ZIP sampled has every day of its quarter; no empty files
+- Every quarterly ZIP sampled has every day of its quarter; no empty files in the sampled ZIPs
 - Data begins 2013-04-10 (earlier 2013 dates absent by design)
-- Others report empty days elsewhere in history → pipeline must record gaps
+- Others report empty days elsewhere in history → pipeline must record gaps (confirmed by the full load: 3 empty days, see §10)
 - RULE: check completeness against the expected calendar from the ZIP name
 
 ## 4. Schema history
@@ -96,5 +97,22 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
 
 ## 9. Open questions (Step 1.4 and later)
 - Duplicates, row-count swings, re-appearing failed drives, capacity changes across a full quarter
-- Schema gaps not sampled: 2014–2015, Q2 2016–2017
+- ~~Schema gaps not sampled: 2014–2015, Q2 2016–2017~~ → answered by the full load: no header in 13 years broke the contract (§10)
 - How to identify boot drives before 2023
+
+## 10. Full-history findings (Phase 2 load, October 2026)
+- All 45 ZIPs (data_2013 … data_Q2_2026) extracted to bronze: 4,830 daily files, 744,525,690 rows
+- Every calendar day from 2013-04-10 to 2026-06-30 is present exactly once; no unexpected dates
+- 0 blocked days: every header in 13 years matched the contract (known columns + SMART pairs)
+- 3 empty days (header only, no rows): 2014-11-02, 2015-11-01, 2017-01-30
+  - The first two are the days US clocks went back an hour (a 25-hour day); a guess, not confirmed
+- Q1 2018 uses Windows line endings (\r\n) throughout
+- 2 files use old-Mac line endings (\r only): 2018-02-25 and 2019-06-17
+  → crashed the first extractor; fixed to read all three styles and flag the unusual ones (warning, not block)
+- 2018-02-25 also writes dates as 2/25/18 instead of 2018-02-25
+  → silver must parse the date column defensively; check 2019-06-17 in Phase 3
+- LESSON: a first look at 2018-01-09 counted line endings on only the start of the file and reported
+  a stray \r that does not exist; the full-file count showed normal \r\n.
+  Measure the whole file before calling something an anomaly
+- RULE: an unusual file is stored and flagged, never dropped; empty days are recorded,
+  and what silver does with them is decided in the contract (Step 3.1)
