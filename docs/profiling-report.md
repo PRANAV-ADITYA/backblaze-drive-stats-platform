@@ -34,15 +34,32 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
 - RULE: check completeness against the expected calendar from the ZIP name
 
 ## 4. Schema history
-- Columns per era: 85 (2013) → 95 (Q1 2016) → 179 (Q1 2023) → 186 (Q2 2023)
-  → 193 (Q3 2023) → 197 (Q2 2026)
+- Full header timeline (all 13 years, from the bronze manifests): 12 layouts; Phase 1 samples had found 6
+
+  | From | Columns | Added |
+  |---|---|---|
+  | 2013-04-10 | 85 | (first layout) |
+  | 2015-01-01 | 95 | 5 SMART pairs: 22, 220, 222, 224, 226 |
+  | 2018-01-01 | 105 | 5 SMART pairs: 177, 179, 181, 182, 235 |
+  | 2018-04-01 | 109 | 2 SMART pairs: 23, 24 |
+  | 2018-10-01 | 129 | 10 SMART pairs: 16, 17, 168, 170, 173, 174, 218, 231, 232, 233 |
+  | 2019-10-01 | 131 | 1 SMART pair: 18 |
+  | 2020-10-01 | 149 | 9 SMART pairs: 175, 180, 202, 206, 210, 234, 245, 247, 248 |
+  | 2021-07-01 | 169 | 10 SMART pairs: 160, 161, 163, 164, 165, 166, 167, 169, 176, 178 |
+  | 2021-10-01 | 179 | 5 SMART pairs: 171, 172, 230, 244, 246 |
+  | 2023-04-01 | 186 | vault_id, pod_id, is_legacy_format + 2 SMART pairs: 71, 90 |
+  | 2023-07-01 | 193 | datacenter, cluster_id, pod_slot_num + 2 SMART pairs: 27, 82 |
+  | 2024-04-01 | 197 | 2 SMART pairs: 211, 212 |
+
+- Phase 1 dated layouts by the first sampled ZIP showing them; the real starts are earlier:
+  95 columns from 2015-01-01 (not Q1 2016), 179 from 2021-10-01 (not Q1 2023), 197 from 2024-04-01 (not Q2 2026)
 - Columns were only ever ADDED, never removed
 - Every addition shifted other columns' positions (52–181 moved)
 - RULE: always read columns by NAME, never by position
 - Non-SMART columns: date, serial_number, model, capacity_bytes, failure (since 2013);
   vault_id, pod_id, is_legacy_format (Q2 2023); datacenter, cluster_id, pod_slot_num (Q3 2023)
 - All other additions were SMART pairs (smart_N_normalized + smart_N_raw)
-- No mid-quarter schema change in sampled ZIPs
+- No mid-quarter schema change in 13 years: all 11 changes happened on the 1st of a quarter
 - 2018+ history doc matches real headers exactly for Q1–Q3 2023
 - Current doc misspells smart_211/212 as "normailized"; real data is correct
 - RULE: verify documentation against data; trust the data
