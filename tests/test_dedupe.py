@@ -1,8 +1,5 @@
 from datetime import date
 
-import pytest
-from pyspark.sql import SparkSession
-
 from silver.cast import WARNINGS
 from silver.dedupe import CONFLICT, EXACT, dedupe
 
@@ -11,18 +8,6 @@ SCHEMA = (
     "_warnings array<string>, _source_file string"
 )
 DAY = date(2019, 6, 17)
-
-
-@pytest.fixture(scope="module")
-def spark():
-    session = (
-        SparkSession.builder.master("local[1]")
-        .appName("tests")
-        .config("spark.ui.enabled", "false")
-        .getOrCreate()
-    )
-    yield session
-    session.stop()
 
 
 def run(spark, rows):
