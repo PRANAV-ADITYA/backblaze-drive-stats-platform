@@ -216,6 +216,7 @@ def test_tables_are_uploaded_one_folder_per_table(s3, tmp_path):
     keys = sorted(o["Key"] for o in s3.list_objects_v2(Bucket=lake)["Contents"])
     assert keys == [
         "ops/bronze_days/bronze_days.jsonl",
+        "ops/header_layouts/header_layouts.jsonl",
         "ops/source_files/source_files.jsonl",
     ]
     body = s3.get_object(Bucket=lake, Key=keys[0])["Body"].read().decode()
@@ -233,3 +234,29 @@ def test_line_ending_warnings_survive_the_rebuild(s3, tmp_path):
 
     assert row["status"] == "ok"
     assert row["warnings"] == ["unusual line endings: cr"]
+
+
+def test_header_layouts_list_each_layout_and_what_changed(s3, tmp_path):
+    fetch(
+        s3, tmp_path, {"2016-04-01": day("2016-04-01"), "2016-04-02": day("2016-04-02")}
+    )
+    extract(s3, tmp_path)
+    newer = HEADER + ",smart_9_raw"
+    fetch(
+        s3,
+        tmp_path,
+        {"2016-07-01": day("2016-07-01", header=newer)},
+        name="data_Q3_2016.zip",
+    )
+    extract(s3, tmp_path, name="data_Q3_2016.zip")
+
+    layouts = tables(s3)["header_layouts"]
+
+    assert [
+        (x["first_day"], x["last_day"], x["days"], x["column_count"]) for x in layouts
+    ] == [
+        ("2016-04-01", "2016-04-02", 2, 7),
+        ("2016-07-01", "2016-07-01", 1, 8),
+    ]
+    assert layouts[0]["added"] == []
+    assert (layouts[1]["added"], layouts[1]["removed"]) == (["smart_9_raw"], [])
