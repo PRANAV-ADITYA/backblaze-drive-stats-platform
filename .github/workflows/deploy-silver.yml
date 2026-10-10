@@ -1,0 +1,33 @@
+name: Deploy silver code
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "silver/**"
+      - "glue/**"
+      - "contracts/**"
+      - "scripts/deploy_silver.sh"
+      - ".github/workflows/deploy-silver.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-silver
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Upload silver code to S3
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_APPLY_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_APPLY_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-southeast-2
+    steps:
+      - uses: actions/checkout@v6
+      - name: Deploy
+        run: ./scripts/deploy_silver.sh
