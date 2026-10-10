@@ -137,7 +137,7 @@ resource "aws_sfn_state_machine" "pipeline" {
           MaxAttempts     = 10
           BackoffRate     = 1.5
         }]
-        Next       = "Done"
+        Next = "Done"
       }
 
       Done = { Type = "Succeed" }
