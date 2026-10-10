@@ -82,7 +82,8 @@ def run(spark, s3, args) -> dict:
 
     good, cast_quarantined = cast_bronze(spark, days, contract)
     good = good.cache()
-    cast_quarantined = cast_quarantined.cache()  # counted, then written: parse bronze once
+    # counted, then written: parse bronze once
+    cast_quarantined = cast_quarantined.cache()
     kept, conflicts = dedupe(good)
     counts = day_counts(
         good, cast_quarantined, conflicts, kept, [d["date"] for d in days]
