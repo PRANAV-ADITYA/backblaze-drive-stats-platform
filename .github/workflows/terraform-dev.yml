@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
     paths: ["infra/**", ".github/workflows/terraform-dev.yml"]
+  workflow_run:
+    workflows: ["Build fetcher image"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
@@ -52,7 +56,9 @@ jobs:
 
   apply:
     name: Apply (dev)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment: dev
     env:
