@@ -36,6 +36,12 @@ resource "aws_sfn_state_machine" "backfill" {
                 "seconds.$" = "$.ExecutionTime"
               }
               ResultPath = "$.result"
+              Retry = [{
+                ErrorEquals     = ["Glue.ConcurrentRunsExceededException"]
+                IntervalSeconds = 60
+                MaxAttempts     = 10
+                BackoffRate     = 1.5
+              }]
               Catch = [{
                 ErrorEquals = ["States.ALL"]
                 ResultPath  = "$.error"
