@@ -32,6 +32,7 @@ def dedupe(good: DataFrame) -> tuple[DataFrame, DataFrame]:
             ).otherwise(F.col(WARNINGS)),
         )
         .withColumn("_versions", F.count("*").over(Window.partitionBy(*KEY)))
+        .cache()  # kept and conflicts both come from this: run the dedupe once
     )
     kept = rows.filter(F.col("_versions") == 1).drop(
         "_fingerprint", "_copies", "_n", "_versions"
