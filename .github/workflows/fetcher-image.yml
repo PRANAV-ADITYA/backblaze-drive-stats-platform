@@ -1,0 +1,48 @@
+name: Build fetcher image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "fetcher/**"
+      - "contracts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/fetcher-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fetcher-image
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build and push (arm64)
+    runs-on: ubuntu-24.04-arm
+    environment: dev
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_APPLY_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_APPLY_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-southeast-2
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Log in to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push, unless this commit's image already exists
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/dsl-dev-fetcher
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          if docker manifest inspect "$IMAGE:$TAG" > /dev/null 2>&1; then
+            echo "image $TAG already in ECR, nothing to do"
+            exit 0
+          fi
+          docker build --platform linux/arm64 -f fetcher/Dockerfile -t "$IMAGE:$TAG" .
+          docker push "$IMAGE:$TAG"
+          echo "pushed $IMAGE:$TAG"

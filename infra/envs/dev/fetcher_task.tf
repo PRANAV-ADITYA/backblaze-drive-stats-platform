@@ -1,9 +1,6 @@
 # The ingestion task on Fargate (Step 2.7).
 
 locals {
-  # Which image runs. Change this, through a PR, to release a new version.
-  fetcher_image_tag = "44da467"
-
   # The roles are created in bootstrap; here we only refer to them by name.
   fetcher_execution_role_arn = "arn:aws:iam::${local.suffix}:role/dsl-dev-fetcher-execution"
   fetcher_task_role_arn      = "arn:aws:iam::${local.suffix}:role/dsl-dev-fetcher-task"
@@ -18,6 +15,13 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_cloudwatch_log_group" "fetcher" {
   name              = "/dsl-dev/fetcher"
   retention_in_days = 30
+}
+
+# Which image runs: the newest one in ECR, pinned by its digest (its exact fingerprint).
+# CI pushes an image when the fetcher changes, then re-applies, so this moves forward by itself.
+data "aws_ecr_image" "fetcher" {
+  repository_name = aws_ecr_repository.fetcher.name
+  most_recent     = true
 }
 
 # The run sheet: which image, how big a machine, which roles, which settings.
@@ -38,7 +42,7 @@ resource "aws_ecs_task_definition" "fetcher" {
 
   container_definitions = jsonencode([{
     name      = "fetcher"
-    image     = "${aws_ecr_repository.fetcher.repository_url}:${local.fetcher_image_tag}"
+    image     = "${aws_ecr_repository.fetcher.repository_url}@${data.aws_ecr_image.fetcher.image_digest}"
     essential = true
 
     environment = [

@@ -182,6 +182,20 @@ data "aws_iam_policy_document" "github_apply_pipeline" {
     resources = ["*"]
   }
   statement {
+    sid       = "LogInToEcr"
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+  statement {
+    sid = "PushFetcherImage"
+    actions = [
+      "ecr:BatchCheckLayerAvailability", "ecr:InitiateLayerUpload", "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload", "ecr:PutImage", "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer", "ecr:DescribeImages",
+    ]
+    resources = ["arn:aws:ecr:${local.ci_region}:${local.ci_account}:repository/dsl-dev-fetcher"]
+  }
+  statement {
     sid       = "HandPipelineTheirRoles"
     actions   = ["iam:PassRole"]
     resources = [aws_iam_role.sensor.arn, aws_iam_role.pipeline.arn, aws_iam_role.scheduler.arn]
