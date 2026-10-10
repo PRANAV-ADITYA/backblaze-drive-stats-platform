@@ -233,3 +233,4 @@ data/
 
 # Local environment variables (never commit secrets)
 .env
+infra/envs/dev/.build/
