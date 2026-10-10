@@ -45,7 +45,9 @@ def fetch(s3, tmp_path, days: dict[str, str], name: str = NAME) -> str:
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for date_text, text in days.items():
-            zf.writestr(f"{date_text}.csv", text)
+            # Fixed timestamp: the same content must always give the same ZIP bytes.
+            info = zipfile.ZipInfo(f"{date_text}.csv", date_time=(2016, 1, 1, 0, 0, 0))
+            zf.writestr(info, text)
     path = tmp_path / "upload.zip"
     path.write_bytes(buf.getvalue())
     remote = RemoteFile(f"https://example.test/{name}", path.stat().st_size, None, None)
