@@ -121,6 +121,11 @@ data "aws_iam_policy_document" "github_apply_glue" {
     ]
   }
   statement {
+    sid       = "UploadGlueCode"
+    actions   = ["s3:PutObject"]
+    resources = ["arn:aws:s3:::dsl-dev-lake-${local.ci_account}/glue/*"]
+  }
+  statement {
     sid       = "PassRoleToGlueOnly"
     actions   = ["iam:PassRole"]
     resources = [aws_iam_role.silver_glue.arn]
