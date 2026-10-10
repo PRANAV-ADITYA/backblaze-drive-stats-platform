@@ -1,7 +1,5 @@
 from datetime import date
 
-import pytest
-from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
 from fetcher.extract import load_contract
@@ -33,18 +31,6 @@ GOOD = {
     "is_legacy_format": "False",
     "smart_9_raw": "123",
 }
-
-
-@pytest.fixture(scope="module")
-def spark():
-    session = (
-        SparkSession.builder.master("local[1]")
-        .appName("tests")
-        .config("spark.ui.enabled", "false")
-        .getOrCreate()
-    )
-    yield session
-    session.stop()
 
 
 def cast(spark, *changes, day="2023-07-01", columns=COLUMNS):

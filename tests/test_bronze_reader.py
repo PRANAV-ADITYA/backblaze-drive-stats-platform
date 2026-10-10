@@ -1,7 +1,6 @@
 import gzip
 
 import pytest
-from pyspark.sql import SparkSession
 
 from silver.bronze_reader import FILE_DATE, group_by_layout, read_bronze, read_layout
 
@@ -10,18 +9,6 @@ NEW = (
     "date,serial_number,model,capacity_bytes,failure,datacenter,cluster_id,"
     "smart_1_normalized,smart_1_raw"
 )
-
-
-@pytest.fixture(scope="module")
-def spark():
-    session = (
-        SparkSession.builder.master("local[1]")
-        .appName("tests")
-        .config("spark.ui.enabled", "false")
-        .getOrCreate()
-    )
-    yield session
-    session.stop()
 
 
 def write_day(folder, day: str, header: str, row: str, line_end: str = "\n") -> str:
