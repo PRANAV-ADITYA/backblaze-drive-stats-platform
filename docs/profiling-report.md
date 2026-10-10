@@ -170,3 +170,10 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
   → Phase 4: decide whether gold counts quarantined failures of drives that then disappear;
     check against Backblaze's published Q2 2019 figures
 - Sample run (7 days, 1,043,823 rows): 1 row quarantined; warning counts match the profiling counts exactly
+
+## 13. Capacity glitches in Q2 2019 (Step 3.7)
+- 27 of 91 days warn "capacity_bytes: impossible" (value below 1, likely Backblaze's -1 for "not reported")
+- 663 rows in Q2 2019 (0.007%), 8 models; every affected drive is affected on one day only
+- Silver keeps the row, sets capacity to null and warns (contract rule min: 1)
+- Phase 4: a drive's capacity never changes, so gold fills a missing capacity from the same
+  drive's other days, so no row drops out of AFR by model and size
