@@ -131,6 +131,12 @@ resource "aws_sfn_state_machine" "pipeline" {
           }
         }
         ResultPath = null
+        Retry = [{
+          ErrorEquals     = ["Glue.ConcurrentRunsExceededException"]
+          IntervalSeconds = 60
+          MaxAttempts     = 10
+          BackoffRate     = 1.5
+        }]
         Next       = "Done"
       }
 
