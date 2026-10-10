@@ -59,3 +59,105 @@ def source_checks(bronze_days: list[dict], contract: dict) -> dict[str, dict]:
         if not check["partial"]:
             normal.append(rows)
     return result
+
+
+# Pipeline checks: what silver did with each day. These block, because they are our own
+# problems and we can fix them: rows lost, too many rows quarantined, too many conflicts.
+
+
+def day_counts(good, cast_quarantined, conflicts, kept, days: list) -> dict[str, dict]:
+    """Per loaded day: rows converted, quarantined, conflicting, kept, and row warnings.
+
+    `good`/`cast_quarantined` come from cast_bronze, `kept`/`conflicts` from dedupe.
+    Every loaded day starts at zero, so an empty day still gets counted (and judged).
+    Each count is a Spark job over the cast rows: cache `good` before calling.
+    """
+    from pyspark.sql import functions as F
+
+    from silver.bronze_reader import FILE_DATE
+    from silver.cast import WARNINGS
+
+    zero = {
+        "cast_good": 0,
+        "cast_quarantined": 0,
+        "conflict_rows": 0,
+        "conflict_drives": 0,
+        "silver_rows": 0,
+        "row_warnings": {},
+    }
+    counts = {str(d): {**zero, "row_warnings": {}} for d in days}
+
+    def add(df, date_column, name):
+        for r in df.groupBy(date_column).count().collect():
+            counts[str(r[0])][name] = r["count"]
+
+    add(good, "date", "cast_good")
+    add(cast_quarantined, FILE_DATE, "cast_quarantined")
+    add(conflicts, FILE_DATE, "conflict_rows")
+    add(kept, "date", "silver_rows")
+    serial = F.get_json_object("raw", "$.serial_number")
+    drives = conflicts.groupBy(FILE_DATE).agg(F.countDistinct(serial).alias("n"))
+    for r in drives.collect():
+        counts[str(r[0])]["conflict_drives"] = r["n"]
+    notes = (
+        kept.select("date", F.explode(WARNINGS).alias("w")).groupBy("date", "w").count()
+    )
+    for r in notes.collect():
+        counts[str(r["date"])]["row_warnings"][r["w"]] = r["count"]
+    return counts
+
+
+def judge_days(
+    source: dict[str, dict], counts: dict[str, dict], contract: dict
+) -> list[dict]:
+    """One verdict per loaded day: blocked, partial, warn or ok, with the reasons.
+
+    `source` comes from source_checks (Backblaze's files), `counts` from day_counts (what
+    silver did). Our problems block; Backblaze's only warn or label the day partial.
+    """
+    limits = contract["day_limits"]
+    verdicts = []
+    for day in sorted(counts):
+        c, s = counts[day], source[day]
+        bronze = s["bronze_rows"] or 0
+        blocks, warnings = [], list(s["warnings"])
+
+        accounted = c["cast_good"] + c["cast_quarantined"]
+        if accounted != bronze:
+            blocks.append(
+                f"rows lost: bronze has {bronze:,}, silver accounts for {accounted:,}"
+            )
+        quarantined = c["cast_quarantined"] + c["conflict_rows"]
+        if quarantined:
+            share = quarantined / bronze
+            message = f"{quarantined:,} rows quarantined ({share:.3%} of the day)"
+            (blocks if share > limits["quarantined_share"] else warnings).append(
+                message
+            )
+        if c["conflict_drives"] > limits["conflicting_drives"]:
+            blocks.append(f"{c['conflict_drives']} drives with conflicting duplicates")
+        exact = c["cast_good"] - c["conflict_rows"] - c["silver_rows"]
+        if exact:
+            warnings.append(f"{exact:,} exact duplicate rows removed")
+        for note, n in sorted(c["row_warnings"].items()):
+            warnings.append(f"{note} on {n:,} rows")
+
+        if blocks:
+            status = "blocked"
+        elif s["partial"]:
+            status = "partial"
+        else:
+            status = "warn" if warnings else "ok"
+        verdicts.append(
+            {
+                "date": day,
+                "status": status,
+                "blocks": blocks,
+                "warnings": warnings,
+                "bronze_rows": bronze,
+                "silver_rows": c["silver_rows"],
+                "quarantined_rows": quarantined,
+                "usual_rows": s["baseline"],
+            }
+        )
+    return verdicts
