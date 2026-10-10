@@ -3,7 +3,7 @@
 
 contract:
   name: backblaze_drive_stats_daily
-  version: 1.2.0
+  version: 1.2.1
   status: draft            # becomes "active" once the Phase 3 backfill validates it
   owner: Pranav Aditya
   description: One row per operational drive per day, from Backblaze's published Drive Stats.
@@ -195,6 +195,9 @@ quality_checks:
       action: block_day
 
 row_count_baseline:
+  window_days: 7                 # how many earlier normal days form the median
+  partial_below: 0.95            # below 95% of the median: partial day (warn + label)
+  warn_beyond: 0.03              # more than 3% above or below the median: warn
   method: median of the last 7 normal days before this day
   normal_day: has data rows and is not labelled partial   # empty, missing and partial days never count
   first_days: use as many earlier normal days as exist; the first day of history is not checked
@@ -237,3 +240,6 @@ changelog:
       Duplicates: exact copies keep one and warn; conflicting copies of a drive on a day are all
       quarantined (no guessing), and more than 50 such drives in one day blocks the day.
       None found in 9 sample days (1.27 M drive-days); the full backfill counts all 13 years.
+  - version: 1.2.1
+    date: 2026-10-10
+    change: Row-count baseline numbers made machine-readable (window_days, partial_below, warn_beyond).
