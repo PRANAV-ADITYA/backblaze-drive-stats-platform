@@ -2,6 +2,7 @@
 
 ops.source_files: one row per version of each ZIP in raw.
 ops.bronze_days:  one row per day per ZIP version in bronze.
+ops.header_layouts: one row per header layout used by the current days.
 
 Both are rebuilt in full on every run. The source records in raw and the manifests in
 bronze are the truth; these tables are a queryable view of them.
@@ -168,12 +169,52 @@ def build_bronze_days(
     return rows
 
 
+def build_header_layouts(s3, bronze_bucket: str, bronze_days: list[dict]) -> list[dict]:
+    """One row per header layout used by the current days, oldest first.
+
+    Says when each layout was used, its columns, and what changed against the layout
+    before it. The same information is in the manifests; this makes it one queryable table.
+    """
+    columns_by_fingerprint: dict[str, list[str]] = {}
+    for key in list_keys(s3, bronze_bucket, MANIFEST_PREFIX):
+        columns_by_fingerprint.update(read_json(s3, bronze_bucket, key)["headers"])
+    used: dict[str, list[str]] = {}
+    for day in bronze_days:
+        if day["is_current"]:
+            used.setdefault(day["header_fingerprint"], []).append(day["date"])
+
+    rows, previous = [], None
+    for fingerprint, dates in sorted(used.items(), key=lambda item: min(item[1])):
+        columns = columns_by_fingerprint[fingerprint]
+        rows.append(
+            {
+                "header_fingerprint": fingerprint,
+                "first_day": min(dates),
+                "last_day": max(dates),
+                "days": len(dates),
+                "column_count": len(columns),
+                "columns": columns,
+                "added": [c for c in columns if c not in previous] if previous else [],
+                "removed": [c for c in previous if c not in columns]
+                if previous
+                else [],
+            }
+        )
+        previous = columns
+    return rows
+
+
 def build_tables(
     s3, raw_bucket: str, bronze_bucket: str, contract: dict
 ) -> dict[str, list]:
     source_files = build_source_files(s3, raw_bucket, bronze_bucket)
     bronze_days = build_bronze_days(s3, bronze_bucket, source_files, contract)
-    return {"source_files": source_files, "bronze_days": bronze_days}
+    header_layouts = build_header_layouts(s3, bronze_bucket, bronze_days)
+    return {
+        "source_files": source_files,
+        "bronze_days": bronze_days,
+        "header_layouts": header_layouts,
+    }
 
 
 def to_jsonl(rows: list[dict]) -> str:
@@ -237,6 +278,7 @@ def main() -> None:
     print(f"  by status: {dict(Counter(d['status'] for d in now))}")
     print(f"  by change: {dict(Counter(d['change'] for d in now))}")
     print(f"  ready for silver: {sum(d['status'] == 'ok' for d in now)}")
+    print(f"header_layouts: {len(tables['header_layouts'])} layout(s)")
     if args.ops_bucket:
         print(f"uploaded: s3://{args.ops_bucket}/{OPS_PREFIX}")
     else:
