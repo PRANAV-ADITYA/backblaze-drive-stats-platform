@@ -26,7 +26,7 @@ resource "aws_glue_job" "silver" {
   role_arn          = "arn:aws:iam::${data.aws_caller_identity.silver.account_id}:role/dsl-dev-silver-glue"
   glue_version      = "5.1"
   worker_type       = "G.1X"
-  number_of_workers = 2
+  number_of_workers = 5
   timeout           = 60 # minutes
   max_retries       = 0
 
