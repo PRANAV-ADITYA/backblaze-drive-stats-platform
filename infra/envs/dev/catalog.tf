@@ -13,8 +13,9 @@ module "athena_results_bucket" {
 }
 
 resource "aws_glue_catalog_database" "ops" {
-  name        = "dsl_dev_ops"
-  description = "Pipeline bookkeeping: which ZIPs and days exist, and their status."
+  name         = "dsl_dev_ops"
+  description  = "Pipeline bookkeeping: which ZIPs and days exist, and their status."
+  location_uri = "s3://${module.lake_bucket.name}/ops"
 }
 
 # One entry per table: its description and its columns (name = type).
