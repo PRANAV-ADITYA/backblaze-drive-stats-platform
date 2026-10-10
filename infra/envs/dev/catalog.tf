@@ -54,6 +54,19 @@ locals {
         contract_version   = "string"
       }
     }
+    header_layouts = {
+      description = "One row per header layout used by the current days, with what changed."
+      columns = {
+        header_fingerprint = "string"
+        first_day          = "string"
+        last_day           = "string"
+        days               = "int"
+        column_count       = "int"
+        columns            = "array<string>"
+        added              = "array<string>"
+        removed            = "array<string>"
+      }
+    }
   }
 }
 
