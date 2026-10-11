@@ -5,3 +5,7 @@
 !fetcher/
 !contracts/
 **/__pycache__
+!dbt/
+dbt/target/
+dbt/logs/
+dbt/.user.yml
