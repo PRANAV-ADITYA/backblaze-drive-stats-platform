@@ -9,7 +9,6 @@ select
     sum(case when is_boot then 0 else failures end)                     as data_failures,
     round(sum(case when is_boot then 0 else failures end)
           / (sum(case when is_boot then 0 else drive_days end) / 365.0) * 100, 2) as afr_pct,
-    sum(case when is_boot then 1 else 0 end)                            as boot_drives,
-    bool_and(boot_rule_applies)                                         as boot_rule_applies
+    sum(case when is_boot then 1 else 0 end)                            as boot_drives
 from {{ ref('fct_drive_quarter') }}
 group by year_quarter
