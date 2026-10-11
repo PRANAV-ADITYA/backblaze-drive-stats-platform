@@ -3,12 +3,15 @@ version: 2
 seeds:
   - name: published_afr
     description: >-
-      AFR figures Backblaze published in the text of its quarterly Drive Stats posts (the per-model
-      tables are images, so only figures stated in the text are here). One source link per row.
+      AFR figures Backblaze stated in the text of its Drive Stats posts (their tables are images).
+      period is a quarter (2019-Q2) or a year (2019-Y). status: check = tested against ours;
+      known_gap = a documented difference still under investigation. One source link per row.
     config:
       column_types:
-        year_quarter: string
+        period: string
         scope: string
         model: string
         afr_pct: double
+        status: string
+        note: string
         source_url: string
