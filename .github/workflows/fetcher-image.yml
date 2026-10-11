@@ -6,6 +6,7 @@ on:
     paths:
       - "fetcher/**"
       - "contracts/**"
+      - "dbt/**"
       - "pyproject.toml"
       - "uv.lock"
       - ".github/workflows/fetcher-image.yml"

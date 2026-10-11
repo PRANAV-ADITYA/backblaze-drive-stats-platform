@@ -14,9 +14,10 @@ RUN uv sync --locked --no-dev --no-install-project
 # The code and the contract it reads.
 COPY fetcher/ fetcher/
 COPY contracts/ contracts/
+COPY dbt/ dbt/
 
 # Use the installed packages, and print output straight away so logs appear live.
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 DBT_SEND_ANONYMOUS_USAGE_STATS=false
 
 # Start as: python -m <module> <arguments>. The module is chosen at run time.
 ENTRYPOINT ["python", "-m"]

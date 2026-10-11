@@ -127,6 +127,8 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "boto3" },
+    { name = "dbt-athena-community" },
+    { name = "dbt-core" },
     { name = "httpx" },
     { name = "pyyaml" },
 ]
@@ -134,8 +136,6 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "botocore", extra = ["crt"] },
-    { name = "dbt-athena-community" },
-    { name = "dbt-core" },
     { name = "duckdb" },
     { name = "ipykernel" },
     { name = "matplotlib" },
@@ -149,6 +149,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.43.108" },
+    { name = "dbt-athena-community", specifier = ">=1.11.1" },
+    { name = "dbt-core", specifier = ">=1.12.5" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "pyyaml", specifier = ">=6.0.3" },
 ]
@@ -156,8 +158,6 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "botocore", extras = ["crt"], specifier = ">=1.43.108" },
-    { name = "dbt-athena-community", specifier = ">=1.11.1" },
-    { name = "dbt-core", specifier = ">=1.12.5" },
     { name = "duckdb", specifier = ">=1.5.6" },
     { name = "ipykernel", specifier = ">=7.4.0" },
     { name = "matplotlib", specifier = ">=3.11.2" },
