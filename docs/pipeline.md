@@ -33,3 +33,14 @@ dsl-dev-backfill runs silver for a list of quarters, one at a time, calling Glue
 - The sensor's new means "this quarter's ZIP exists at Backblaze"; for a named quarter that may
   already be loaded
 - Glue allows one silver run at a time; Silver steps retry while the previous run releases its slot
+
+## End to end, including gold (Phase 4)
+The Gold step runs `dbt build` (fetcher.gold) on Fargate after Silver: every gold model plus every test,
+including the reconciliation with Backblaze's published AFR. A failed test fails the run (red), so wrong
+numbers are never published quietly. Evidence: docs/evidence/pipeline-gold-q2-2019.png
+
+Idempotency, end to end: re-running an already-loaded quarter (Q2 2019) through the whole pipeline
+changed nothing. Fetch and extract skipped what they had, silver replaced the quarter's days with
+identical results, and gold rebuilt to identical totals: 729,680,649 AFR drive-days, 31,669 failures,
+3,394 model-quarter rows, 744,290,059 drive-days in fleet_daily, 74 published figures matched,
+the same before and after the run.
