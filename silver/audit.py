@@ -161,3 +161,29 @@ def judge_days(
             }
         )
     return verdicts
+
+
+# Known source defects (contract 1.3.0): days whose source file is proven wrong. They are not
+# loaded; the verdict is a known gap (warn), the same way an empty day is. Not a block: a block
+# means our own problem, and nothing we fix can bring back data that is not in the release.
+
+
+def known_defects(contract: dict) -> dict[str, str]:
+    """Date -> reason, from the contract's known_source_defects (empty if there are none)."""
+    return {
+        str(d["date"]): d["reason"] for d in contract.get("known_source_defects", [])
+    }
+
+
+def defect_verdict(day: dict, reason: str) -> dict:
+    """Verdict for a skipped day. bronze_rows keeps the real count, so nothing is hidden."""
+    return {
+        "date": day["date"],
+        "status": "warn",
+        "blocks": [],
+        "warnings": [f"known source defect, not loaded: {reason}"],
+        "bronze_rows": day["row_count"],
+        "silver_rows": 0,
+        "quarantined_rows": 0,
+        "usual_rows": None,
+    }
