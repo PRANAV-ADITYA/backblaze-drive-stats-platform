@@ -38,3 +38,26 @@ Run: Q2 2019 (2019-04-01 to 2019-06-30), 91 bronze days, 9,831,137 silver rows. 
 - A job that is fine on 4 days can be 6x wasteful at 91: test on a medium-sized chunk before a backfill
 - More workers only help when the work is not repeated; fix the repeats first, then scale
 - Faster can be cheaper: Glue bills workers x time
+
+## 2. Full backfill on Glue (Step 3.9)
+
+53 quarters (Q2 2013 to Q2 2026), one at a time, by the dsl-dev-backfill state machine (Map, MaxConcurrency 1).
+
+| Years | Seconds per quarter |
+|---|---|
+| 2013-2015 | 154-324 |
+| 2019 | 456-502 |
+| 2022 | 855-1,035 |
+| 2024 | 1,226-1,481 |
+| 2026 | 1,680-1,869 |
+
+- Total about 38,900 s of Glue time (10.8 h), 5 workers: about 54 DPU-hours
+- Run time grows with Backblaze's fleet; the largest quarter (31 min) is half the 60-minute job timeout.
+  Phase 6: watch this, and split quarters or add workers before it gets close
+
+### First attempt: 50 of 53 quarters failed in about a second
+- Error: Glue.ConcurrentRunsExceededException. The job allows 1 run at a time (on purpose); Step Functions
+  started the next quarter milliseconds after the previous one finished, before Glue released the slot
+- The Catch sent each to Failed and the loop moved on instantly, so every later quarter hit the same wall
+- Fix: Retry on exactly that error (every 60 s, backoff 1.5, up to 10 times); real failures still go to Catch
+- Lesson: a loop needs a retry for "busy, try again" as well as a catch for real failures

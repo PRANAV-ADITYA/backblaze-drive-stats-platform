@@ -177,3 +177,21 @@ Notebooks: `exploration/01_one_day_profile.ipynb`, `02_schema_eras.ipynb`, `03_f
 - Silver keeps the row, sets capacity to null and warns (contract rule min: 1)
 - Phase 4: a drive's capacity never changes, so gold fills a missing capacity from the same
   drive's other days, so no row drops out of AFR by model and size
+
+## 14. Full-history checks after the backfill (Step 3.9)
+- 4,830 days in silver (2013-04-10 to 2026-06-30): 3,319 ok, 1,429 warn, 82 partial, 0 blocked
+- 744,290,059 silver rows = the sum the day checks counted; bronze = silver + quarantine on every day
+- Only 8 rows quarantined in 13 years
+- 2022-12-10 was blocked (100% of rows quarantined: date column says 2022-12-11). Investigation:
+  - every row's date column says 2022-12-11; same 235,623 drives as the 2022-12-11 file
+  - 235,615 rows identical to 2022-12-11; the other 8 differ only in failure (1 in the real 12-11 file),
+    and those 8 drives are gone from 2022-12-12, so the failures are real and already in silver
+  - drives gained a median 47 power-on hours (smart_9_raw) since 2022-12-09: two days, not one
+  - conclusion: the file is a copy of 2022-12-11; the real 2022-12-10 readings are not in the release
+  - likely cause (not confirmed by Backblaze): collection for the 10th failed and the export took the
+    next snapshot before that day's failures were flagged; the ZIP was never re-released
+  - RULE (contract 1.3.0): known_source_defects; the day is a documented gap (warn), not a block
+- Header timeline: no column has values in silver before its layout starts (no column mixing).
+  vault_id and datacenter fill from their first day; new SMART columns start days to weeks later
+  because no drive reports them yet. Checked in bronze for smart_211 (2024-04-01 to 06-01: 0, 0, 1)
+  and smart_23 (2018-04-01 to 06-07: 0, 0, 79)
