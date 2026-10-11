@@ -10,6 +10,7 @@ Backblaze publishes one ZIP per quarter (one per year for 2013-2015). The pipeli
            Extract (Fargate)    one gzip CSV per day into bronze (skips days already there)
            Bookkeeping (Fargate) rebuild source_files, bronze_days, header_layouts
            Silver (Glue)        cast, dedupe, day checks, WAP publish, verdicts in ops.silver_days
+           Gold (Fargate)       dbt build: gold marts and tests, incl. reconciliation with Backblaze
 
 Every step is idempotent, so a failed run is fixed by running it again. Start by hand with {} or
 {"quarter": "Q2_2019"}. Evidence: docs/evidence/pipeline-q2-2019.png (a full re-run of Q2 2019:

@@ -137,8 +137,20 @@ resource "aws_sfn_state_machine" "pipeline" {
           MaxAttempts     = 10
           BackoffRate     = 1.5
         }]
-        Next = "Done"
+        Next = "Gold"
       }
+
+      # Gold: dbt build (all gold models + tests, incl. reconciliation). A failed test fails the run.
+      Gold = merge(local.run_fetcher, {
+        Parameters = merge(local.fetcher_params, {
+          Overrides = { ContainerOverrides = [{
+            Name    = "fetcher"
+            Command = ["fetcher.gold"]
+          }] }
+        })
+        TimeoutSeconds = 3600
+        Next           = "Done"
+      })
 
       Done = { Type = "Succeed" }
     }
