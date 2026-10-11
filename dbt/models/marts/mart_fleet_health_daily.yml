@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: mart_fleet_health_daily
+    description: >-
+      One row per day, manufacturer and drive role (data or boot): drives, failures and a rolling
+      30-day AFR (the day and the 29 calendar days before it).
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: manufacturer
+        data_tests: [not_null]
+      - name: drive_role
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [data, boot]
+      - name: rolling_30d_afr_pct
+        data_tests: [not_null]
