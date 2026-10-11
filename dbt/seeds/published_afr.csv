@@ -1,14 +1,79 @@
-year_quarter,scope,model,afr_pct,source_url
-2025-Q2,fleet,,1.36,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
-2025-Q3,fleet,,1.55,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
-2025-Q2,model,HGST HUH721212ALN604,3.39,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
-2025-Q2,model,ST12000NM0007,3.58,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
-2025-Q2,model,ST14000NM0138,4.37,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
-2025-Q3,model,ST10000NM0086,7.97,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
-2025-Q3,model,ST14000NM0138,6.86,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
-2025-Q3,model,TOSHIBA MG08ACA16TEY,16.95,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
-2021-Q2,fleet,,1.01,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
-2022-Q1,fleet,,1.22,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
-2022-Q2,fleet,,1.46,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
-2022-Q2,model,ST4000DM000,3.42,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
-2022-Q2,model,TOSHIBA MG08ACA16TA,0.0,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
+period,scope,model,afr_pct,status,note,source_url
+2016-Q1,fleet,,1.84,check,,https://www.backblaze.com/blog/hard-drive-reliability-stats-q1-2016/
+2016-Q4,fleet,,1.94,check,,https://www.backblaze.com/blog/hard-drive-benchmark-stats-2016/
+2017-Q3,fleet,,1.84,check,,https://www.backblaze.com/blog/hard-drive-failure-rates-q3-2017/
+2017-Q4,fleet,,1.65,check,,https://www.backblaze.com/blog/hard-drive-stats-for-q1-2018/
+2018-Q1,fleet,,1.2,check,published with one decimal (1.2%),https://www.backblaze.com/blog/hard-drive-stats-for-q1-2018/
+2018-Q2,fleet,,1.08,check,,https://www.backblaze.com/blog/hard-drive-stats-for-q2-2018/
+2019-Q1,fleet,,1.56,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q1-2019/
+2019-Q2,fleet,,1.8,check,published with one decimal (1.8%),https://www.backblaze.com/blog/backblaze-hard-drive-stats-q2-2020/
+2019-Q3,fleet,,2.07,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q3-2020/
+2020-Q1,fleet,,1.07,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q1-2020/
+2020-Q2,fleet,,0.81,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q2-2020/
+2020-Q3,fleet,,0.89,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q3-2020/
+2021-Q1,fleet,,0.85,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-q1-2021/
+2021-Q2,fleet,,1.01,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2021/
+2021-Q3,fleet,,1.1,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2022/
+2022-Q1,fleet,,1.22,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
+2022-Q2,fleet,,1.46,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
+2022-Q3,fleet,,1.64,check,the Q3 2023 post says 1.65,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2022/
+2022-Q4,fleet,,1.21,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2023/
+2023-Q1,fleet,,1.54,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2023/
+2023-Q2,fleet,,2.28,check,the Q3 2023 post says 2.2,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2023/
+2023-Q3,fleet,,1.47,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2023/
+2023-Q4,fleet,,1.53,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2024/
+2024-Q1,fleet,,1.41,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2024/
+2024-Q2,fleet,,1.71,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2024/
+2024-Q3,fleet,,1.89,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2024/
+2024-Q4,fleet,,1.35,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2024/
+2025-Q1,fleet,,1.42,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q2,fleet,,1.36,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
+2025-Q3,fleet,,1.55,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
+2026-Q1,fleet,,1.24,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2026/
+2026-Q2,fleet,,1.73,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2026/
+2014-Y,fleet,,6.39,known_gap,matched 6.38 with no model minimum - early yearly figures likely counted every model,https://www.backblaze.com/blog/hard-drive-benchmark-stats-2016/
+2016-Y,fleet,,1.95,check,,https://www.backblaze.com/blog/hard-drive-benchmark-stats-2016/
+2018-Y,fleet,,1.25,check,,https://www.backblaze.com/blog/hard-drive-stats-for-2018/
+2019-Y,fleet,,1.89,check,the 2021 post says 1.83,https://www.backblaze.com/blog/hard-drive-stats-for-2019/
+2020-Y,fleet,,0.93,check,,https://www.backblaze.com/blog/backblaze-hard-drive-stats-for-2020/
+2021-Y,fleet,,1.01,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2021/
+2022-Y,fleet,,1.37,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2022/
+2023-Y,fleet,,1.7,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2023/
+2024-Y,fleet,,1.57,check,the 2025 post says 1.55,https://www.backblaze.com/blog/backblaze-drive-stats-for-2024/
+2025-Y,fleet,,1.36,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2025/
+2015-Y,fleet,,2.47,known_gap,ours is about 2.78 - under investigation,https://www.backblaze.com/blog/hard-drive-benchmark-stats-2016/
+2016-Q4,model,ST8000DM002,1.65,known_gap,post says these 8TB drives - likely all Seagate 8TB models together,https://www.backblaze.com/blog/hard-drive-benchmark-stats-2016/
+2017-Q4,model,ST4000DM005,29.08,check,,https://www.backblaze.com/blog/hard-drive-stats-for-2017/
+2021-Q2,model,ST14000NM0138,5.55,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2021/
+2021-Q2,model,MD04ABA400V,4.07,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2021/
+2021-Q3,model,ST14000NM0138,6.29,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2021/
+2021-Q4,model,ST14000NM0138,4.66,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2021/
+2022-Q1,model,HUH728080ALE604,24.31,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2022/
+2022-Q2,model,ST4000DM000,3.42,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
+2022-Q2,model,MG08ACA16TA,0.0,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2022/
+2023-Q3,model,WUH721816ALE6L0,0.15,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2023/
+2023-Q3,model,MG07ACA14TEY,0.63,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2023/
+2024-Q2,model,HUH721212ALN604,7.17,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2024/
+2024-Q4,model,ST10000NM0086,5.72,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2024-Q4,model,HUH721212ALN604,5.15,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2024-Q4,model,ST12000NM0007,8.72,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2024-Q4,model,ST14000NM0138,5.95,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,ST10000NM0086,4.72,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,HUH721212ALN604,4.97,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,ST12000NM0007,9.47,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,ST14000NM0138,6.82,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,HMS5C4040BLE640,0.34,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q1,model,ST24000NM002H,1.11,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2025/
+2025-Q2,model,HUH721212ALN604,3.39,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
+2025-Q2,model,ST12000NM0007,3.58,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
+2025-Q2,model,ST14000NM0138,4.37,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2025/
+2025-Q3,model,ST10000NM0086,7.97,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
+2025-Q3,model,ST14000NM0138,6.86,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
+2025-Q3,model,MG08ACA16TEY,16.95,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q3-2025/
+2025-Q4,model,HUH728080ALE600,10.29,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2025/
+2025-Q4,model,ST10000NM0086,5.23,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2025/
+2025-Q4,model,MG08ACA16TEY,4.14,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-2025/
+2026-Q1,model,ST16000NM000J,3.61,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q1-2026/
+2026-Q2,model,HUH721212ALN604,7.63,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2026/
+2026-Q2,model,ST10000NM0086,9.33,known_gap,post table has 86092 drive-days and 22 failures; public files have the same drive-days and 23 failures,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2026/
+2026-Q2,model,ST14000NM0138,8.26,check,,https://www.backblaze.com/blog/backblaze-drive-stats-for-q2-2026/

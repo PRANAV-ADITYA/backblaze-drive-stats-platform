@@ -1,11 +1,9 @@
 -- One row per drive per quarter: model, drive-days, failures, and whether it was a boot drive.
 --
 -- Boot drive (Backblaze leaves them out of AFR) = capacity under 1 TB. Boot drives are small SSDs and
--- laptop-size disks (250-500 GB); data drives are 1.5-24 TB. Reconciled against Backblaze's published
--- fleet AFR for 2021-Q2, 2022-Q1, 2022-Q2, 2025-Q2 and 2025-Q3: all exact. Wrong turns on the way:
---   "no pod slot on a row" removed failed data drives (they lose their slot on their failure day);
---   "never in a slot all quarter" caught big data drives pulled for problems.
--- ever_in_a_slot is kept for information (pod_slot_num exists only from 2023-07-01).
+-- laptop-size disks (250-500 GB); data drives are 1.5-24 TB. See docs/reconciliation.md.
+-- at_quarter_end: the drive reported on the quarter's last day (Backblaze's model thresholds count
+-- drives at quarter end).
 with drive_days as (
     select
         cast(year(date) as varchar) || '-Q' || cast(quarter(date) as varchar) as year_quarter,
@@ -26,7 +24,9 @@ per_drive as (
         count(*)                                 as drive_days,
         sum(case when failure then 1 else 0 end) as failures,
         bool_or(pod_slot_num is not null)        as ever_in_a_slot,
-        max(capacity_bytes)                      as capacity_bytes
+        max(capacity_bytes)                      as capacity_bytes,
+        max(date)                                as last_day,
+        max(date) = date_add('day', -1, date_add('month', 3, date_trunc('quarter', max(date)))) as at_quarter_end
     from drive_days
     group by year_quarter, serial_number
 )
