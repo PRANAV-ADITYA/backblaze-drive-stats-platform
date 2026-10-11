@@ -1,0 +1,18 @@
+# Gold layer (Phase 4): SQL models built from silver, run through Athena, stored as Iceberg.
+name: backblaze
+version: "1.0.0"
+config-version: 2
+profile: backblaze
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  backblaze:
+    +materialized: table
+    +table_type: iceberg
+    +format: parquet
