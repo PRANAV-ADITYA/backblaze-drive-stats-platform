@@ -1,0 +1,18 @@
+priority,pattern,manufacturer
+10,TOSHIBA %,Toshiba
+10,HGST %,HGST
+10,Hitachi %,Hitachi
+10,WDC %,Western Digital
+10,WD %,Western Digital
+10,Seagate %,Seagate
+10,SAMSUNG %,Samsung
+10,Samsung %,Samsung
+10,Micron %,Micron
+10,HP %,HP
+20,WUH%,Western Digital
+20,MTFDDAV%,Micron
+20,SSDSCKKB%,Intel
+20,CT%,Crucial
+20,DELLBOSS%,Dell
+30,ST%,Seagate
+99,%,Unknown

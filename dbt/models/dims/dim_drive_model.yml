@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: dim_drive_model
+    description: One row per drive model, with its manufacturer (from the model_manufacturers seed) and usual capacity.
+    columns:
+      - name: model
+        data_tests:
+          - unique
+          - not_null
+      - name: manufacturer
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [Toshiba, HGST, Hitachi, Western Digital, Seagate, Samsung, Micron, HP, Intel, Crucial, Dell, Unknown]
+      - name: capacity_bytes
+        data_tests:
+          - not_null
