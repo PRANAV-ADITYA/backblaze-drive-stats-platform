@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: fct_model_daily
+    description: One row per day per drive model, with drive-days and failures.
+    columns:
+      - name: date
+        data_tests: [not_null]
+      - name: drive_days
+        data_tests: [not_null]
+
+  - name: mart_afr_quarterly
+    description: AFR per drive model per quarter (unfiltered), with the quarter's day statuses.
+    columns:
+      - name: year_quarter
+        data_tests: [not_null]
+      - name: model
+        data_tests: [not_null]
+      - name: manufacturer
+        data_tests: [not_null]
+      - name: afr_pct
+        data_tests: [not_null]
