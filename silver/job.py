@@ -17,7 +17,13 @@ from pathlib import Path
 import boto3
 import yaml
 
-from silver.audit import day_counts, judge_days, source_checks
+from silver.audit import (
+    day_counts,
+    defect_verdict,
+    judge_days,
+    known_defects,
+    source_checks,
+)
 from silver.cast import cast_bronze
 from silver.dedupe import dedupe
 from silver.publish import publish
@@ -64,6 +70,11 @@ def run(spark, s3, args) -> dict:
         ).splitlines()
     ]
     chosen = select_days(bronze_days, args.start, args.end)
+    defects = known_defects(contract)
+    skipped = [
+        defect_verdict(r, defects[r["date"]]) for r in chosen if r["date"] in defects
+    ]
+    chosen = [r for r in chosen if r["date"] not in defects]
     if not chosen:
         return {
             "published": [],
@@ -89,7 +100,7 @@ def run(spark, s3, args) -> dict:
         good, cast_quarantined, conflicts, kept, [d["date"] for d in days]
     )
     current = [r for r in bronze_days if r["is_current"]]
-    verdicts = judge_days(source_checks(current, contract), counts, contract)
+    verdicts = judge_days(source_checks(current, contract), counts, contract) + skipped
 
     c = args.catalog
     result = publish(

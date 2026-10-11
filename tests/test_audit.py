@@ -123,3 +123,43 @@ def test_exact_duplicates_and_row_warnings_are_reported():
         "2 exact duplicate rows removed",
         "capacity_bytes: unreadable on 5 rows",
     ]
+
+
+def test_known_defects_reads_the_contract():
+    from silver.audit import known_defects
+
+    contract = {
+        "known_source_defects": [{"date": "2022-12-10", "reason": "copy of 12-11"}]
+    }
+    assert known_defects(contract) == {"2022-12-10": "copy of 12-11"}
+    assert known_defects({}) == {}
+
+
+def test_known_defects_accepts_unquoted_yaml_dates():
+    from datetime import date
+
+    from silver.audit import known_defects
+
+    contract = {"known_source_defects": [{"date": date(2022, 12, 10), "reason": "x"}]}
+    assert known_defects(contract) == {"2022-12-10": "x"}
+
+
+def test_defect_verdict_is_a_labelled_gap_not_a_block():
+    from silver.audit import defect_verdict
+
+    v = defect_verdict({"date": "2022-12-10", "row_count": 235623}, "copy of 12-11")
+    assert v["status"] == "warn"
+    assert v["blocks"] == []
+    assert (v["bronze_rows"], v["silver_rows"], v["quarantined_rows"]) == (235623, 0, 0)
+    assert "not loaded: copy of 12-11" in v["warnings"][0]
+
+
+def test_the_real_contract_lists_2022_12_10():
+    from pathlib import Path
+
+    import yaml
+
+    from silver.audit import known_defects
+
+    contract = yaml.safe_load(Path("contracts/drive_stats_daily.v1.yaml").read_text())
+    assert "2022-12-10" in known_defects(contract)

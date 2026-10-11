@@ -3,7 +3,7 @@
 
 contract:
   name: backblaze_drive_stats_daily
-  version: 1.2.2
+  version: 1.3.0
   status: draft            # becomes "active" once the Phase 3 backfill validates it
   owner: Pranav Aditya
   description: One row per operational drive per day, from Backblaze's published Drive Stats.
@@ -214,6 +214,16 @@ derived_rules:                     # applied in gold, documented here so they li
     evidence: Q2 2026 → 3,949 boot drives, 0 failures (Backblaze reported 3,881)
     open_question: rule for data before 2023-07-01 (no pod_slot_num)
 
+# Days whose daily file is proven wrong at the source (by checking the data itself).
+# Silver does not load them: the day becomes a known gap (warn), like an empty day, not a block.
+known_source_defects:
+  - date: "2022-12-10"
+    reason: copy of 2022-12-11 (the real 2022-12-10 readings are not in the release)
+    evidence: >-
+      Every row's date column says 2022-12-11; 235,615 of 235,623 rows match the 2022-12-11 file
+      exactly (the other 8 differ only in the failure flag, set in the real 2022-12-11 file);
+      drives gained a median 47 power-on hours since 2022-12-09, i.e. two days, not one.
+
 changelog:
   - version: 1.0.0
     date: 2026-10-04
@@ -250,3 +260,8 @@ changelog:
   - version: 1.2.2
     date: 2026-10-10
     change: Blocking day limits made machine-readable (day_limits).
+  - version: 1.3.0
+    date: 2026-10-11
+    change: >-
+      known_source_defects: a day whose source file is proven wrong is not loaded and becomes a
+      known gap (warn), not a block. First entry: 2022-12-10, a copy of 2022-12-11.
