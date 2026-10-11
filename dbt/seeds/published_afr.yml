@@ -1,0 +1,14 @@
+version: 2
+
+seeds:
+  - name: published_afr
+    description: >-
+      AFR figures Backblaze published in the text of its quarterly Drive Stats posts (the per-model
+      tables are images, so only figures stated in the text are here). One source link per row.
+    config:
+      column_types:
+        year_quarter: string
+        scope: string
+        model: string
+        afr_pct: double
+        source_url: string
