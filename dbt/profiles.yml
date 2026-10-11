@@ -7,7 +7,7 @@ backblaze:
       region_name: ap-southeast-2
       database: awsdatacatalog
       schema: dsl_dev_gold
-      work_group: dsl-dev-queries
+      work_group: dsl-dev-dbt
       s3_staging_dir: s3://dsl-dev-lake-739871966917/athena-results/dbt/
       s3_data_dir: s3://dsl-dev-lake-739871966917/gold/
       s3_data_naming: schema_table_unique

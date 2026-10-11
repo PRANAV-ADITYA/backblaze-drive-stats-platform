@@ -132,3 +132,31 @@ output "ops_database" {
 output "athena_workgroup" {
   value = aws_athena_workgroup.queries.name
 }
+
+# dbt's own "desk" (Phase 4): gold builds read whole columns over 13 years, so they get a higher
+# cap than people do. Ad-hoc queries stay on dsl-dev-queries with its 1 GB limit.
+resource "aws_athena_workgroup" "dbt" {
+  name = "${local.prefix}-dbt"
+
+  configuration {
+    enforce_workgroup_configuration    = true
+    bytes_scanned_cutoff_per_query     = 53687091200 # 50 GB, about 25 cents at most
+    publish_cloudwatch_metrics_enabled = true
+
+    engine_version {
+      selected_engine_version = "Athena engine version 3"
+    }
+
+    result_configuration {
+      output_location = "s3://${module.athena_results_bucket.name}/dbt/"
+
+      encryption_configuration {
+        encryption_option = "SSE_S3"
+      }
+    }
+  }
+}
+
+output "athena_dbt_workgroup" {
+  value = aws_athena_workgroup.dbt.name
+}
