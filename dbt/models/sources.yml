@@ -1,0 +1,15 @@
+version: 2
+
+# Tables dbt reads but does not build.
+sources:
+  - name: silver
+    schema: dsl_dev_silver
+    tables:
+      - name: drive_stats
+        description: One row per drive per day (one drive-day). Built by the silver Glue job.
+      - name: quarantine
+  - name: ops
+    schema: dsl_dev_ops
+    tables:
+      - name: silver_days
+        description: One verdict per day (ok, warn, partial, blocked) from the silver job.

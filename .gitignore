@@ -234,3 +234,6 @@ data/
 # Local environment variables (never commit secrets)
 .env
 infra/envs/dev/.build/
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/

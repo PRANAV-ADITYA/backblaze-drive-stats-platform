@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: fleet_daily
+    description: One row per day with the number of drives reporting and the number that failed.
+    columns:
+      - name: date
+        description: The day (from the bronze file name).
+        data_tests:
+          - unique
+          - not_null
+      - name: drives
+        description: Drives reporting that day (= drive-days for that day).
+        data_tests:
+          - not_null
+      - name: failures
+        description: Drives marked failed that day.
+        data_tests:
+          - not_null
