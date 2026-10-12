@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: surv_drive
+    description: >
+      One row per drive for survival analysis (Kaplan-Meier, Cox).
+      Death = the drive's first failure; rows after it are ignored
+      (3.6% of failed serials reappear; see docs/ml-tables.md).
+      Drives already running on the first data day (2013-04-10) are
+      excluded because their real start date is unknown.
+    columns:
+      - name: serial_number
+        data_tests:
+          - unique
+          - not_null
+      - name: duration_days
+        description: Days observed, first_seen to last_seen inclusive.
+        data_tests:
+          - not_null
+      - name: event
+        description: 1 = failed, 0 = censored (still running or removed).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false
+      - name: end_reason
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['failed', 'still_running', 'removed']
+      - name: manufacturer
+        data_tests:
+          - not_null

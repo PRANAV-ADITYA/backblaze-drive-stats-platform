@@ -11,6 +11,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+analysis = [
+    "lifelines>=0.30.0",
+    "matplotlib>=3.11.2",
+    "pyathena[pandas]>=3.34.0",
+]
 dev = [
     "botocore[crt]>=1.43.108",
     "duckdb>=1.5.6",
