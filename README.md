@@ -26,24 +26,21 @@
 ## Architecture
 
 ```mermaid
-flowchart TD
-    S[EventBridge Scheduler<br/>daily 09:00 IST] --> SF
-    subgraph SF[Step Functions: dsl-dev-pipeline]
-        A[Sense<br/>Lambda] -->|new quarter?| B[Fetch + Extract<br/>Fargate]
-        B --> C[Silver<br/>Glue 5.1 PySpark]
-        C --> D[Gold<br/>dbt on Athena, in Fargate]
+flowchart TB
+    subgraph ORCH["Orchestration: EventBridge Scheduler (daily 09:00 IST) runs Step Functions"]
+        direction LR
+        O1[Sense<br/>Lambda] -->|new quarter?| O2[Fetch + Extract<br/>Fargate] --> O3[Silver<br/>Glue 5.1 PySpark] --> O4[Gold<br/>dbt on Athena]
     end
-    BB[(Backblaze<br/>quarterly ZIPs)] --> B
-    B --> RAW[(Raw: ZIPs<br/>content-addressed)]
-    B --> BRZ[(Bronze: one gzip CSV<br/>per day)]
-    BRZ --> C
-    C --> SIL[(Silver: Iceberg<br/>744M rows)]
-    C --> OPS[(Ops: per-day verdicts,<br/>quarantine)]
-    SIL --> D
-    D --> GOLD[(Gold: Iceberg marts,<br/>reconciliation, ML tables)]
-    GOLD --> Q[Athena queries,<br/>notebooks]
-    M[Monthly maintenance<br/>Glue: sort, compact, expire] -.-> SIL
-    AL[CloudWatch + EventBridge<br/>alerts -> SNS email] -.-> SF
+    subgraph DATA["Data: S3 + Apache Iceberg lake"]
+        direction LR
+        BB[(Backblaze<br/>quarterly ZIPs)] --> RAW[(Raw<br/>ZIPs by sha256)] --> BRZ[(Bronze<br/>one CSV per day)] --> SIL[(Silver<br/>Iceberg, 744M rows)] --> GOLD[(Gold<br/>marts, reconciliation,<br/>ML tables)] --> USE[Athena queries,<br/>notebooks]
+    end
+    subgraph OPS["Operations"]
+        direction LR
+        AL[Alerts to email<br/>+ runbooks] ~~~ DB[CloudWatch<br/>dashboard] ~~~ MT[Monthly maintenance<br/>sort, compact, expire]
+    end
+    ORCH -.->|each step writes its layer| DATA
+    DATA -.->|watched and maintained by| OPS
 ```
 
 Raw is immutable and the replay source; every stage processes an explicit list of days, so the 13-year backfill and a quarterly load use the same code path.
