@@ -24,7 +24,7 @@ resource "aws_sns_topic_policy" "alerts" {
 
 resource "aws_cloudwatch_metric_alarm" "pipeline_failed" {
   alarm_name          = "dsl-dev-pipeline-failed"
-  alarm_description   = "A dsl-dev-pipeline run failed (fetch, extract, silver or gold/dbt). Runbook: docs/runbooks/pipeline-failed.md"
+  alarm_description   = "A dsl-dev-pipeline run failed (fetch, extract, silver or gold/dbt). Runbook: https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/blob/main/docs/runbooks/pipeline-failed.md"
   namespace           = "AWS/States"
   metric_name         = "ExecutionsFailed"
   dimensions          = { StateMachineArn = local.alerts_pipeline_arn }
@@ -39,7 +39,7 @@ resource "aws_cloudwatch_metric_alarm" "pipeline_failed" {
 
 resource "aws_cloudwatch_metric_alarm" "pipeline_not_running" {
   alarm_name          = "dsl-dev-pipeline-not-running"
-  alarm_description   = "dsl-dev-pipeline has not started for about 2 days; the daily schedule may be broken. Runbook: docs/runbooks/pipeline-not-running.md"
+  alarm_description   = "dsl-dev-pipeline has not started for about 2 days; the daily schedule may be broken. Runbook: https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/blob/main/docs/runbooks/pipeline-not-running.md"
   namespace           = "AWS/States"
   metric_name         = "ExecutionsStarted"
   dimensions          = { StateMachineArn = local.alerts_pipeline_arn }
@@ -55,7 +55,7 @@ resource "aws_cloudwatch_metric_alarm" "pipeline_not_running" {
 
 resource "aws_cloudwatch_metric_alarm" "sensor_errors" {
   alarm_name          = "dsl-dev-sensor-errors"
-  alarm_description   = "The dsl-dev-sensor Lambda raised an error. Runbook: docs/runbooks/sensor-errors.md"
+  alarm_description   = "The dsl-dev-sensor Lambda raised an error. Runbook: https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/blob/main/docs/runbooks/sensor-errors.md"
   namespace           = "AWS/Lambda"
   metric_name         = "Errors"
   dimensions          = { FunctionName = "dsl-dev-sensor" }
@@ -70,7 +70,7 @@ resource "aws_cloudwatch_metric_alarm" "sensor_errors" {
 
 resource "aws_cloudwatch_event_rule" "glue_failed" {
   name        = "dsl-dev-glue-job-failed"
-  description = "Any dsl-dev Glue job run that fails or times out, including inside the backfill. Runbook: docs/runbooks/glue-job-failed.md"
+  description = "Any dsl-dev Glue job run that fails or times out, including inside the backfill. Runbook: https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/blob/main/docs/runbooks/glue-job-failed.md"
   event_pattern = jsonencode({
     source      = ["aws.glue"]
     detail-type = ["Glue Job State Change"]
@@ -91,6 +91,6 @@ resource "aws_cloudwatch_event_target" "glue_failed" {
       state = "$.detail.state"
       run   = "$.detail.jobRunId"
     }
-    input_template = "\"Glue job <job> ended in state <state> (run <run>). Runbook: docs/runbooks/glue-job-failed.md\""
+    input_template = "\"Glue job <job> ended in state <state> (run <run>). Runbook: https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/blob/main/docs/runbooks/glue-job-failed.md\""
   }
 }
