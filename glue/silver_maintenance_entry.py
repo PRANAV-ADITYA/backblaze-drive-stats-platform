@@ -3,8 +3,10 @@
 1. Keep the table's write order: serial_number.
 2. Rewrite data files sorted by serial_number into ~256 MB files. Scheduled runs
    only rewrite files that need it; pass --rewrite_all true for a full re-sort.
-3. Expire snapshots older than 7 days (always keep the last 10), which deletes
-   data files no snapshot uses any more.
+3. Expire snapshots older than 7 days (keep at least the current one), which deletes
+   data files no snapshot uses any more. retain_last is 1 on purpose: the
+   sort commits in chunks, so any older snapshot still points at pre-sort files.
+   The 7-day window still protects all recent history.
 4. Report orphan files (dry run only; nothing is deleted).
 
 Sorting lets Athena skip files using Parquet min/max stats on serial_number
@@ -50,7 +52,7 @@ spark.sql(
     CALL glue_catalog.system.expire_snapshots(
         table => '{TABLE_ARG}',
         older_than => TIMESTAMP '{cutoff}',
-        retain_last => 10
+        retain_last => 1
     )
     """
 ).show(truncate=False)
