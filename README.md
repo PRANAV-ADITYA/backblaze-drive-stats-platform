@@ -99,7 +99,7 @@ The source behaves like a real vendor feed: quarterly ZIP drops, schema drift ac
 | CI with stored keys, OIDC deferred ([ADR 0001](docs/adr/0001-ci-aws-credentials.md)) | Faster start on a Free plan account | Long-lived credentials; OIDC is the next step |
 | Dev only; prod deferred ([#81](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/issues/81)) | Cost | No promotion step yet |
 
-Deep dives: [performance](docs/performance.md), [source profiling](docs/profiling-report.md), [pipeline](docs/pipeline.md), [reconciliation](docs/reconciliation.md), [ML tables](docs/ml-tables.md).
+Deep dives: [full design document (PDF)](docs/Backblaze_Drive_Stats_Design.pdf), [performance](docs/performance.md), [source profiling](docs/profiling-report.md), [pipeline](docs/pipeline.md), [reconciliation](docs/reconciliation.md), [ML tables](docs/ml-tables.md).
 
 ## Evidence
 
