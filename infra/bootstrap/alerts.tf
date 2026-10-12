@@ -37,6 +37,16 @@ resource "aws_iam_policy" "github_apply_alerts" {
         Resource = "*"
       },
       {
+        Sid    = "Dashboards"
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:DeleteDashboards"
+        ]
+        Resource = "arn:aws:cloudwatch::739871966917:dashboard/dsl-dev-*"
+      },
+      {
         Sid    = "EventRules"
         Effect = "Allow"
         Action = [
