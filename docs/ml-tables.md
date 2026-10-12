@@ -73,3 +73,22 @@ One row per hard drive per day, 2025-07-01 to 2026-06-30 (dbt var feat_start). B
 | Label-1 rows per failed drive | median 30; 1,861 have fewer (failures in early July 2025, young drives, missing days) |
 
 About 0.1% of rows are positive, so any model trained on this needs to handle heavy class imbalance.
+
+## Leakage tests
+
+Singular dbt tests on feat_drive_day (0 rows returned = pass):
+
+| Test | Catches |
+|---|---|
+| feat_drive_day_label_null_at_horizon | A label of 0 within 30 days of the data end, where the outcome cannot be known yet |
+| feat_drive_day_no_rows_after_failure | Rows on or after a drive's first failure |
+| feat_drive_day_label_matches_failures | Labels that disagree with fct_drive_failure, an independent table |
+| feat_drive_day_features_use_past_only | For one sample week, today's SMART 5 and its 7-day change recomputed directly from silver using only past rows must match the table |
+
+All pass.
+
+## Known limits
+
+- feat_drive_day starts at a fixed date (feat_start); it grows as new quarters arrive rather than rolling.
+- The daily pipeline's Gold step now also rebuilds the ML tables when a new quarter lands, so that step takes longer than before.
+- Removed (healthy) drives get label 0 for days after removal inside the 30-day window.
