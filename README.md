@@ -3,12 +3,13 @@
 **A production-style batch data platform on AWS that turns 13 years of Backblaze hard drive telemetry (744 million drive-days) into tested, reconciled reliability marts and point-in-time-correct ML tables. It runs daily with no manual steps.**
 
 [![CI](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/actions/workflows/ci.yml)
-![AWS](https://img.shields.io/badge/AWS-Glue%20%7C%20Athena%20%7C%20Step%20Functions%20%7C%20Fargate-orange)
-![Iceberg](https://img.shields.io/badge/Apache%20Iceberg-lakehouse-blue)
-![Spark](https://img.shields.io/badge/PySpark-Glue%205.1-red)
-![dbt](https://img.shields.io/badge/dbt-Athena-ff694b)
-![Terraform](https://img.shields.io/badge/Terraform-IaC-623CE4)
-![Python](https://img.shields.io/badge/Python-uv-3776AB)
+
+<img src="https://skillicons.dev/icons?i=aws,py,terraform,githubactions,docker" alt="AWS, Python, Terraform, GitHub Actions, Docker" />
+
+![PySpark](https://img.shields.io/badge/PySpark-Glue%205.1-E25A1C?logo=apachespark&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-Athena-FF694B?logo=dbt&logoColor=white)
+![Apache Iceberg](https://img.shields.io/badge/Apache%20Iceberg-lakehouse-1E88E5)
+![AWS services](https://img.shields.io/badge/AWS-Glue%20%7C%20Athena%20%7C%20Step%20Functions%20%7C%20Fargate-232F3E)
 
 ## Key numbers
 
