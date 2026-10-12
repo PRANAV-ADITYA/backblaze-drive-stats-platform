@@ -41,6 +41,7 @@ spark.sql(
         options => map(
             'rewrite-all', '{str(rewrite_all).lower()}',
             'target-file-size-bytes', '268435456',
+            'min-file-size-bytes', '67108864',
             'partial-progress.enabled', 'true'
         )
     )
