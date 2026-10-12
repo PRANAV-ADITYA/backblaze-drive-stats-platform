@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: fct_drive_failure
+    description: >
+      One row per failed drive (its first failure). SMART values on the
+      failure day, plus the change over the previous 7 and 30 days, using
+      the latest reading 7-14 days (or 30-37 days) before failure. Changes are
+      null when no reading exists in that range. age_days = power-on hours / 24 (null when
+      missing or outside 0-20 years).
+    columns:
+      - name: serial_number
+        data_tests:
+          - unique
+          - not_null
+      - name: fail_date
+        data_tests:
+          - not_null
+      - name: manufacturer
+        data_tests:
+          - not_null
