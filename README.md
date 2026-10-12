@@ -18,7 +18,7 @@
 | Correctness | Recomputed **all 78 AFR figures** Backblaze has published: **74 match** within tolerance, 4 gaps investigated and documented |
 | Idempotency | Full pipeline rerun produced an **identical gold fingerprint** |
 | Spark tuning | Silver load for one quarter: **1,944 s → 502 s** (3.9x faster) by fixing repeated work from Spark laziness |
-| Storage layout | One-drive lookup: **4,043 MB → 115 MB scanned** (35x less); table **30% smaller** after sorting and compaction |
+| Storage layout | Sorting and compaction: one-drive lookup **4,043 MB → 115 MB scanned**, table **30% smaller**; month partitions for recent data then cut quarterly reads **3x** at a measured cost to lookups ([details](docs/performance.md)) |
 | Data quality | Versioned source contract, per-day verdicts, write-audit-publish, quarantine; a duplicated source file found and handled |
 | ML-ready | 121.8M-row feature table with a 30-day failure label, **null (not 0) at the data horizon**, guarded by 4 leakage tests |
 | Operations | Email alerts with runbooks, dashboard, monthly maintenance, every change through PR + CI |
@@ -68,7 +68,7 @@ The source behaves like a real vendor feed: quarterly ZIP drops, schema drift ac
 
 **Orchestration.** A Lambda sensor checks for the next quarterly ZIP every day; Step Functions runs fetch, extract, silver and gold; a separate backfill state machine replays any list of quarters one at a time, with retries for Glue concurrency limits.
 
-**Data quality.** `contracts/drive_stats_daily.v1.yaml` holds the rules: required columns, date formats, quarantine and conflict limits, a row-count baseline (median of the previous 7 days), and known source defects. Every day gets a verdict in `ops.silver_days` (ok, warn, partial, blocked) and silver is written to an Iceberg branch and published only after audits pass (write-audit-publish). Replays replace exactly the listed days ([ADR 0002](docs/adr/0002-silver-replace-days.md)).
+**Data quality.** `contracts/drive_stats_daily.v1.yaml` holds the rules: required columns, date formats, quarantine and conflict limits, a row-count baseline (median of the previous 7 days), and known source defects. Every day gets a verdict in `ops.silver_days` (ok, warn, partial, blocked) and silver is written to an Iceberg branch and published only after audits pass (write-audit-publish). Replays replace exactly the listed days ([ADR 0002](docs/adr/0002-silver-replace-days.md)). The drift policy (new SMART column added, new non-SMART column blocked until the contract is updated) is proven by an automated [drift drill](docs/drift-drill.md).
 
 **Reconciliation.** Backblaze publishes AFR figures in blog posts. Matching them required reverse-engineering their inclusion rules, which changed by era: excluding boot drives (under 1 TB) and small-population models with thresholds of 45, 60, and then 100 drives plus 10,000 drive-days. Their own posts disagree with each other by up to 0.06, which set the tolerance. Details and wrong turns: [docs/reconciliation.md](docs/reconciliation.md).
 
@@ -93,7 +93,7 @@ The source behaves like a real vendor feed: quarterly ZIP drops, schema drift ac
 |---|---|---|
 | Step Functions, not Airflow | Workload is daily and tiny; no always-on scheduler to pay for | Less familiar UI than Airflow |
 | Iceberg with replace-days on a WAP branch ([ADR 0002](docs/adr/0002-silver-replace-days.md)) | The source is authoritative per day, so replacing days is simpler than MERGE and reruns are idempotent | Two commits per load |
-| Sort silver by serial_number, not by model as first planned | Benchmarks showed model filters were already cheap and serial lookups read 4 GB | Date-filtered queries now read more (3 MB to 63 MB, still tiny); month partitions planned to fix it |
+| Sort silver by serial_number, not by model as first planned | Benchmarks showed model filters were already cheap and serial lookups read 4 GB | Date-filtered queries read more (3 MB to 63 MB); month partitions for 2025+ cut that to 20 MB but raised one-drive lookups to 430 MB, because a month fits in one or two files. Kept months: quarterly reads are the everyday workload |
 | dbt runs inside the fetcher image | One image, one build pipeline | Image carries dbt even for fetch tasks |
 | Feature table in dbt on Athena, not Glue | Fits at a one-year scope; reviewable SQL and tests | Full-history features would need incremental builds |
 | CI with stored keys, OIDC deferred ([ADR 0001](docs/adr/0001-ci-aws-credentials.md)) | Faster start on a Free plan account | Long-lived credentials; OIDC is the next step |
@@ -105,7 +105,7 @@ Deep dives: [performance](docs/performance.md), [source profiling](docs/profilin
 
 | Pipeline run (Step Functions) | Health dashboard |
 |---|---|
-| ![Pipeline run](docs/evidence/pipeline-q2-2019.png) | ![Dashboard](docs/evidence/dashboard.jpg) |
+| ![Pipeline run](docs/evidence/pipeline-gold.png) | ![Dashboard](docs/evidence/dashboard.jpg) |
 
 Benchmarks: [before](docs/evidence/benchmark-before.md) and [after](docs/evidence/benchmark-after.md) the silver layout change.
 
@@ -125,7 +125,6 @@ Benchmarks: [before](docs/evidence/benchmark-before.md) and [after](docs/evidenc
 
 ## Known gaps and next steps
 
-- Partition evolution (year to month) to restore date pruning, and a drift drill that injects a new column end to end.
 - Prod environment with artifact promotion and approval ([#81](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/issues/81)); drive location history as SCD2 ([#76](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/issues/76)).
 - 2015 yearly AFR differs from Backblaze's published figure (2.47 vs about 2.78); not yet explained.
 - The sensor handles quarterly ZIPs only (2013 to 2015 were published yearly; loaded by backfill).

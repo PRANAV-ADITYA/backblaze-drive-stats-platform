@@ -111,3 +111,23 @@ Lessons from the first runs:
 - retain_last had to be 1, not 10. The sort committed in 7 chunks and silver loads commit twice per load (delete, then append), so keeping the 10 newest snapshots would have kept a pre-sort snapshot alive, and with it all 343 old files (about 24 GB). The 7-day window still protects all recent history.
 - The first scheduled-mode run took 23 minutes. Step timings from the log: start-up about 45 s, rewrite about 21.9 min (40 files, 4.4 GB merged into 20), expire 9 s, orphan check 7 s. The cost was the rewrite: Iceberg's default treats files under about 75% of the target (about 192 MB) as too small, and many freshly sorted files were 100 to 190 MB. Setting min-file-size-bytes to 64 MB limits monthly rewrites to genuinely small files, such as a new quarter's load.
 - No orphan files were found. Expiry deleted nothing on the first run because every snapshot was under 7 days old; the pre-sort files are freed by the first run after the window passes.
+
+## 4. Partition evolution: years to months for recent data (Phase 7)
+
+The maintenance job gained an `--evolve_months` switch (default false). One run replaced the partition field `years(date)` with `months(date)` and rewrote only 2025 onwards (818 s). Older data was not rewritten: a month of 2013 data would be about 20 MB, far below the 256 MB target, while a month of 2025-26 data is about 10M rows, close to it. The table now has two partition specs: year partitions for 2013-2024 and 18 month partitions for January 2025 to June 2026. Row count unchanged: 744,290,059.
+
+| Query | Year partitions, sorted | Months for 2025+ |
+|---|---|---|
+| Q1 AFR by model, one quarter | 62.9 MB | 20.3 MB |
+| Q2 one drive's full history | 115.1 MB | 429.9 MB |
+| Q3 one model across 13 years | 180.7 MB | 212.0 MB |
+
+Results: `docs/evidence/benchmark-months.md`.
+
+### What it shows
+
+Partitioning and sorting compete. The serial sort helps only when a partition holds several files, each covering a narrow range of serials, so Athena can skip most of them. A year folder held about 8 such files. A month folder holds one or two, each covering every serial, so a one-drive lookup has to read the serial column of every 2025-26 file.
+
+### Decision
+
+Kept months. The everyday workload is quarterly reporting (the AFR marts and fleet health read silver by date range), which got 3x cheaper; single-drive lookups are occasional investigations. All three queries stay far below the 2 GB design target. A real team would decide from query logs; with Iceberg, evolving back to years is one more maintenance run.
