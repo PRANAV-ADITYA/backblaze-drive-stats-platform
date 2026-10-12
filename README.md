@@ -39,10 +39,8 @@ flowchart TB
         direction LR
         AL[Alerts to email<br/>+ runbooks] ~~~ DB[CloudWatch<br/>dashboard] ~~~ MT[Monthly maintenance<br/>sort, compact, expire]
     end
-    O2 -.-> RAW
-    O3 -.-> SIL
-    O4 -.-> GOLD
-    MT -.-> SIL
+    ORCH -.->|each step writes its layer| DATA
+    DATA -.->|watched and maintained by| OPS
 ```
 
 Raw is immutable and the replay source; every stage processes an explicit list of days, so the 13-year backfill and a quarterly load use the same code path.
