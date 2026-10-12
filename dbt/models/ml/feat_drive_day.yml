@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: feat_drive_day
+    description: >
+      One row per hard drive per day from feat_start (default 2025-07-01)
+      to the data end. Boot drives (under 1 TB) excluded. Features use only
+      rows dated on or before the row's date: SMART 5/187/188/197/198 today,
+      change vs 7-14 and 30-37 days earlier, and 30-day max. age_days =
+      power-on hours / 24. label_fail_30d: 1 if the first failure falls in
+      d+1..d+30, 0 if not and all 30 days are observed, null otherwise.
+      Rows on or after the first failure are excluded.
+    columns:
+      - name: serial_number
+        data_tests:
+          - not_null
+      - name: date
+        data_tests:
+          - not_null
+      - name: label_fail_30d
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+                quote: false

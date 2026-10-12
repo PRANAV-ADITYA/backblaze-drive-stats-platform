@@ -56,3 +56,20 @@ One row per failed serial (its first failure): 33,565 rows, equal to the distinc
 Roughly 6 to 8 in 10 failing hard drives show a SMART warning on their last day; the rest fail silently, which caps what SMART-based prediction can achieve.
 
 Not comparable: HP, Crucial, Micron, Samsung, Dell and Intel are mostly SSD boot drives, where these SMART numbers mean different things. Parked: HP's median age of 43 days looks odd (possibly a different power-on-hours convention).
+
+## feat_drive_day
+
+One row per hard drive per day, 2025-07-01 to 2026-06-30 (dbt var feat_start). Boot drives under 1 TB excluded. Built with dbt on Athena, partitioned by month(date); the design doc planned a Glue job, but dbt fits at this scope.
+
+- Features use only rows dated on or before d: SMART 5/187/188/197/198 today, change vs a reading 7-14 and 30-37 days earlier, 30-day max, age from power-on hours.
+- label_fail_30d: 1 if the first failure falls in d+1..d+30; 0 if not and all 30 days are observed; null if not and the window runs past the data end. Rows on or after the first failure are excluded.
+
+| Check | Value |
+|---|---|
+| Rows | 121,849,508 |
+| Drives | 361,677 |
+| label 1 / 0 / null | 118,155 / 111,220,051 / 10,511,302 |
+| Failures in the window | 4,708, of which 4,680 have label-1 rows (the rest are boot drives) |
+| Label-1 rows per failed drive | median 30; 1,861 have fewer (failures in early July 2025, young drives, missing days) |
+
+About 0.1% of rows are positive, so any model trained on this needs to handle heavy class imbalance.
