@@ -23,14 +23,40 @@ from pyspark.sql import SparkSession
 TABLE = "glue_catalog.dsl_dev_silver.drive_stats"
 TABLE_ARG = "dsl_dev_silver.drive_stats"
 
-args = getResolvedOptions(sys.argv, ["rewrite_all"])
+args = getResolvedOptions(sys.argv, ["rewrite_all", "evolve_months"])
 rewrite_all = args["rewrite_all"].lower() == "true"
+evolve_months = args["evolve_months"].lower() == "true"
 cutoff = (datetime.now(tz=UTC) - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
 
 spark = SparkSession.builder.getOrCreate()
 
 spark.sql(f"ALTER TABLE {TABLE} WRITE ORDERED BY serial_number")
 print("write order: serial_number")
+
+if evolve_months:
+    # Phase 7: switch the partition rule from years to months. Files written
+    # before keep the year rule; only 2025 onwards is rewritten into months,
+    # so the table ends up with two partition specs, both readable.
+    spark.sql(
+        f"ALTER TABLE {TABLE} REPLACE PARTITION FIELD years(date) WITH months(date)"
+    )
+    print("partition spec: years(date) -> months(date)")
+    spark.sql(
+        f"""
+        CALL glue_catalog.system.rewrite_data_files(
+            table => '{TABLE_ARG}',
+            strategy => 'sort',
+            sort_order => 'serial_number ASC NULLS LAST',
+            where => "date >= '2025-01-01'",
+            options => map(
+                'rewrite-all', 'true',
+                'target-file-size-bytes', '268435456',
+                'partial-progress.enabled', 'true'
+            )
+        )
+        """
+    ).show(truncate=False)
+    print("2025 onwards rewritten into month partitions")
 
 spark.sql(
     f"""

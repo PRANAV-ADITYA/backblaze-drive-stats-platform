@@ -25,6 +25,7 @@ resource "aws_glue_job" "silver_maintenance" {
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-metrics"                   = "true"
     "--rewrite_all"                      = "false"
+    "--evolve_months"                    = "false"
   }
 }
 
