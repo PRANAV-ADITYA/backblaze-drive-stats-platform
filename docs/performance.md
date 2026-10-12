@@ -101,3 +101,13 @@ Run times stayed about 1.5 to 2.5 s for all three.
 - Sorting also improved compression: each drive's consecutive days sit together and most values repeat from one day to the next, so the table shrank by 30%.
 - A table has one physical order. The old files were grouped by date by accident of how they were written; sorting by serial broke that, so date-filtered and model-filtered queries now read more. The trade is still strongly positive (about 3,930 MB saved on Q2 versus 60 MB and 135 MB more on Q1 and Q3), and every query is well under the design targets (under 2 GB).
 - Planned follow-up: partition evolution from years to months (Phase 7) restores date pruning for Q1-style queries.
+
+### Scheduled maintenance (monthly)
+
+Schedule `dsl-dev-silver-maintenance-monthly`: 1st of the month, 02:00 Asia/Kolkata. Steps: keep the write order, rewrite small files sorted by serial_number, expire snapshots older than 7 days, report orphan files (dry run).
+
+Lessons from the first runs:
+
+- retain_last had to be 1, not 10. The sort committed in 7 chunks and silver loads commit twice per load (delete, then append), so keeping the 10 newest snapshots would have kept a pre-sort snapshot alive, and with it all 343 old files (about 24 GB). The 7-day window still protects all recent history.
+- The first scheduled-mode run took 23 minutes. Step timings from the log: start-up about 45 s, rewrite about 21.9 min (40 files, 4.4 GB merged into 20), expire 9 s, orphan check 7 s. The cost was the rewrite: Iceberg's default treats files under about 75% of the target (about 192 MB) as too small, and many freshly sorted files were 100 to 190 MB. Setting min-file-size-bytes to 64 MB limits monthly rewrites to genuinely small files, such as a new quarter's load.
+- No orphan files were found. Expiry deleted nothing on the first run because every snapshot was under 7 days old; the pre-sort files are freed by the first run after the window passes.
