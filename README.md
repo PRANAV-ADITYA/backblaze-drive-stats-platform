@@ -2,26 +2,34 @@
 
 **A production-style batch data platform on AWS that turns 13 years of Backblaze hard drive telemetry (744 million drive-days) into tested, reconciled reliability marts and point-in-time-correct ML tables. It runs daily with no manual steps.**
 
-<p align="center">
-  <strong>AWS services</strong><br/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Analytics/48/Arch_AWS-Glue_48.svg" alt="AWS Glue" height="44" title="AWS Glue"/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Analytics/48/Arch_Amazon-Athena_48.svg" alt="Amazon Athena" height="44" title="Amazon Athena"/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_App-Integration/48/Arch_AWS-Step-Functions_48.svg" alt="AWS Step Functions" height="44" title="AWS Step Functions"/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Containers/48/Arch_AWS-Fargate_48.svg" alt="AWS Fargate" height="44" title="AWS Fargate"/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg" alt="Amazon S3" height="44" title="Amazon S3"/>
-  <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Compute/48/Arch_AWS-Lambda_48.svg" alt="AWS Lambda" height="44" title="AWS Lambda"/>
-  <br/><sub>Glue 5.1 · Athena · Step Functions · Fargate · S3 · Lambda</sub>
-</p>
+<div align="center">
 
-<p align="center">
-  <strong>Data &amp; engineering</strong><br/>
-  <img src="https://img.shields.io/badge/Apache_Iceberg-lakehouse-2684FF?style=for-the-badge" alt="Apache Iceberg" height="30" title="Apache Iceberg"/>&nbsp;&nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/apachespark/E25A1C" alt="Apache Spark" height="36" title="Apache Spark / PySpark"/>&nbsp;&nbsp;&nbsp;
-  <img src="https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white" alt="dbt" height="30" title="dbt"/>&nbsp;&nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/terraform/844FBA" alt="Terraform" height="36" title="Terraform"/>&nbsp;&nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" height="36" title="Python"/>
-  <br/><sub>Apache Iceberg · PySpark · dbt · Terraform · Python · uv</sub>
-</p>
+### AWS services
+
+<table>
+<tr>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Analytics/48/Arch_AWS-Glue_48.svg" width="52" height="52" alt="AWS Glue"/><br/><sub><b>Glue 5.1</b></sub></td>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Analytics/48/Arch_Amazon-Athena_48.svg" width="52" height="52" alt="Amazon Athena"/><br/><sub><b>Athena</b></sub></td>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_App-Integration/48/Arch_AWS-Step-Functions_48.svg" width="52" height="52" alt="AWS Step Functions"/><br/><sub><b>Step Functions</b></sub></td>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Containers/48/Arch_AWS-Fargate_48.svg" width="52" height="52" alt="AWS Fargate"/><br/><sub><b>Fargate</b></sub></td>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg" width="52" height="52" alt="Amazon S3"/><br/><sub><b>S3</b></sub></td>
+<td align="center" width="120"><img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Compute/48/Arch_AWS-Lambda_48.svg" width="52" height="52" alt="AWS Lambda"/><br/><sub><b>Lambda</b></sub></td>
+</tr>
+</table>
+
+### Data &amp; engineering
+
+<table>
+<tr>
+<td align="center" width="140"><img src="https://cdn.simpleicons.org/apachespark/E25A1C" width="44" height="44" alt="Apache Spark"/><br/><sub><b>PySpark</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.simpleicons.org/dbt/FF694B" width="44" height="44" alt="dbt"/><br/><sub><b>dbt</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.simpleicons.org/terraform/844FBA" width="44" height="44" alt="Terraform"/><br/><sub><b>Terraform</b></sub></td>
+<td align="center" width="140"><img src="https://cdn.simpleicons.org/python/3776AB" width="44" height="44" alt="Python"/><br/><sub><b>Python</b></sub></td>
+<td align="center" width="140"><span style="font-size:28px;color:#2684FF">◆</span><br/><sub><b>Apache Iceberg</b></sub></td>
+</tr>
+</table>
+
+</div>
 
 ## Key numbers
 
