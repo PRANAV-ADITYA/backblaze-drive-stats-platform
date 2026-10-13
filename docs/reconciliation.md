@@ -52,8 +52,6 @@ These incorrect approaches were rejected during reconciliation because they excl
 
 The reconciliation test uses a tolerance of **0.05 percentage points for fleet figures** and **0.01 percentage points for model figures**. The build fails when a row marked `check` exceeds its applicable tolerance.
 
-The seed includes historical references before 2021; coverage is not limited to 2021–2025. The four `known_gap` entries remain documented exceptions rather than passing checks.
-
 Drives in certification testing that Backblaze excludes are not identifiable from the public data. The current reconciliation results do not establish whether such drives are present in the public files.
 
 A quarter with blocked days is marked provisional. The current run has zero blocked days.
