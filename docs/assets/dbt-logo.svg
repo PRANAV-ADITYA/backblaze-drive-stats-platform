@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 64">
+  <rect width="128" height="64" rx="10" fill="#fff"/>
+  <g fill="#FF694B">
+    <path d="M20 14h12v12H20zM36 14h12v12H36zM20 30h12v12H20zM36 30h12v12H36z"/>
+    <path d="M52 14h12v12H52zM52 30h12v12H52z"/>
+  </g>
+  <text x="70" y="41" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="700" fill="#FF694B">dbt</text>
+</svg>
