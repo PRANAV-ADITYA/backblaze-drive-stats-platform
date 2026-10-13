@@ -21,9 +21,9 @@
 
 <table>
 <tr>
-<td align="center" width="140"><img src="https://cdn.simpleicons.org/apacheiceberg/4BA3D3" width="44" height="44" alt="Apache Iceberg" title="Apache Iceberg"/><br/><sub><b>Apache Iceberg</b></sub></td>
+<td align="center" width="140"><img src="/Users/pranavaditya/projects/backblaze-drive-stats-platform/docs/assets/apache-iceberg.svg" width="44" height="44" alt="Apache Iceberg" title="Apache Iceberg"/><br/><sub><b>Apache Iceberg</b></sub></td>
 <td align="center" width="140"><img src="https://cdn.simpleicons.org/apachespark/E25A1C" width="44" height="44" alt="Apache Spark"/><br/><sub><b>PySpark</b></sub></td>
-<td align="center" width="140"><img src="https://cdn.simpleicons.org/dbt/FF694A" width="44" height="44" alt="dbt"/><br/><sub><b>dbt</b></sub></td>
+<td align="center" width="140"><img src="/Users/pranavaditya/projects/backblaze-drive-stats-platform/docs/assets/dbt-bit.svg" width="44" height="44" alt="dbt"/><br/><sub><b>dbt</b></sub></td>
 <td align="center" width="140"><img src="https://cdn.simpleicons.org/terraform/844FBA" width="44" height="44" alt="Terraform"/><br/><sub><b>Terraform</b></sub></td>
 <td align="center" width="140"><img src="https://cdn.simpleicons.org/python/3776AB" width="44" height="44" alt="Python"/><br/><sub><b>Python</b></sub></td>
 <td align="center" width="140"><img src="https://cdn.simpleicons.org/docker/2496ED" width="44" height="44" alt="Docker"/><br/><sub><b>Docker</b></sub></td>
