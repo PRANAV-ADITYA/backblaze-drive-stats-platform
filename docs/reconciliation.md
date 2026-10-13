@@ -1,42 +1,59 @@
-# AFR reconciliation with Backblaze's published figures (Phase 4)
+# AFR reconciliation with Backblaze's published figures
 
-Our AFR is checked against the figures Backblaze states in the text of its quarterly Drive Stats posts
-(their per-model tables are images). Every figure is in dbt/seeds/published_afr.csv with its source link,
-and the dbt test rec_published_afr_within_tolerance fails the build if any differs by more than
-0.01 percentage points.
+Our AFR is compared with figures Backblaze states in the text of its Drive Stats posts (per-model tables are published as images). The reference figures and source links are maintained in `dbt/seeds/published_afr.csv`.
 
 ## Result
-13 of 13 published figures reproduced exactly (difference 0.00):
-- Fleet AFR (data drives): 2021-Q2 1.01%, 2022-Q1 1.22%, 2022-Q2 1.46%, 2025-Q2 1.36%, 2025-Q3 1.55%
-- Models: ST4000DM000 2022-Q2 3.42%; Toshiba MG08ACA16TA 2022-Q2 0 failures in 32,064 drive-days;
-  HGST HUH721212ALN604 2025-Q2 3.39%; ST12000NM0007 2025-Q2 3.58%; ST14000NM0138 2025-Q2 4.37% and
-  2025-Q3 6.86%; ST10000NM0086 2025-Q3 7.97%; Toshiba MG08ACA16TEY 2025-Q3 16.95%
+
+The reconciliation seed contains 78 published references:
+- **74 within tolerance**
+- **4 documented gaps** marked `known_gap`
+
+A `check` row is tested against our calculated AFR. A `known_gap` row records a documented discrepancy that remains unresolved; it is not counted as a passing reconciliation. The dbt reconciliation test checks rows marked `check`.
+
+The four documented gaps are:
+- 2015 yearly fleet AFR: published 2.47%; ours approximately 2.78%.
+- 2014 yearly fleet AFR: published 6.39%; ours 6.28% (6.38% without the minimum-population rule).
+- ST8000DM002, 2016-Q4: the published figure may cover all 8 TB Seagate models together, rather than this model alone.
+- ST10000NM0086, 2026-Q2: the public files contain 23 distinct failed drives, versus 22 in the published figure.
 
 ## How AFR is computed
-- One silver row = one drive on one day = one drive-day; a failed drive's last row has failure = 1
-- AFR = failures / (drive-days / 365) x 100
-- Per-model AFR needed no filter at all: it matched exactly from the start, so our counting is the same as Backblaze's
 
-## Filters replicated (fleet AFR only)
-1. Boot drives excluded = drives under 1 TB (per drive and quarter, fct_drive_quarter.is_boot).
-   Boot drives are small SSDs and laptop-size disks (Backblaze 2022: 2,558 SSD + 1,462 HDD boot drives).
-   Our count: about 3,400-4,100 per quarter; Backblaze states about 4,000.
-   Boot drives' failures are excluded too (2021-Q2: 65, 2022-Q1: 46, 2022-Q2: 33; 2025: 0).
+- One silver row represents one drive on one day, or one drive-day.
+- A failed drive's last row has `failure = 1`.
+- **AFR = failures / (drive-days / 365) × 100.**
 
-Not needed: Backblaze's model thresholds (more than 100 drives and 10,000 drive-days for the quarterly
-table) do not change the fleet AFR they state in the text; the fleet figure covers all data drives.
+## Inclusion rules
 
-## Wrong turns (each found because the published figure did not match)
-- "No pod slot on a row = boot drive": removed 80% of failures. A failed data drive loses its slot on its
-  failure day, so its last row has no slot
-- "Never in a slot all quarter = boot drive": removed 43-68 large data drives per quarter (pulled for
-  problems, then failed) along with their failures; AFR too low (1.33% vs 1.36%)
-- "Never in a slot and under 1 TB": exact for 2025, but pod_slot_num only exists from 2023-07-01.
-  Size alone gives the same drives in 2025 and also works before 2023, so size alone is the rule
+### Boot drives (fleet AFR)
 
-## Limits
-- Checked against 2021-2025 only. Before 2021 no published figure is in the seed yet; the same rule is
-  assumed. Add older figures to the seed when found; the test then covers them automatically
-- Drives in certification testing (Backblaze excludes them) are not identifiable in the public data;
-  every check so far matches without them, so they are probably not in the public files
-- Provisional AFR: a quarter with blocked days is marked provisional (none today: 0 blocked days)
+Boot drives are excluded from fleet AFR. In this project, a boot drive is identified as a drive with capacity under 1 TB for that drive and quarter, using `fct_drive_quarter.is_boot`. Backblaze's 2022 post described 2,558 SSD and 1,462 HDD boot drives; our count is approximately 3,400–4,100 per quarter. Boot-drive failures are excluded along with their drive-days. In the quarters checked during the Phase 4 investigation, excluded boot-drive failures were 65 (2021-Q2), 46 (2022-Q1), 33 (2022-Q2), and 0 in the checked 2025 quarters.
+
+### Model-table population thresholds
+
+Model-table eligibility thresholds are separate from the fleet calculation. The project documents these era-specific minimum-population rules for published model figures:
+
+| Era | Minimum model population |
+|---|---|
+| Before 2019 | 45 drives at quarter end |
+| 2019–2022 | 60 drives at quarter end |
+| 2023 onward | More than 100 drives and more than 10,000 drive-days |
+
+These thresholds determine eligibility for the published model table; they should not be interpreted as filters on fleet AFR unless the published fleet definition calls for them.
+
+## Wrong turns
+
+These incorrect approaches were rejected during reconciliation because they excluded real data-drive failures:
+
+- **Treating a missing pod slot as a boot drive:** removed 80% of failures. A failed data drive can lose its slot on its failure day, so its final row may have no slot.
+- **Treating a drive that was never in a slot all quarter as a boot drive:** excluded 43–68 large data drives per quarter that had been pulled for problems and subsequently failed, making AFR too low (for example, 1.33% instead of 1.36%).
+- **Combining “never in a slot” with capacity under 1 TB:** this matched the observed 2025 set, but `pod_slot_num` is only present from 2023-07-01. Capacity alone is available for earlier periods and is the rule used here.
+
+## Tolerances and limits
+
+The reconciliation test uses a tolerance of **0.05 percentage points for fleet figures** and **0.01 percentage points for model figures**. The build fails when a row marked `check` exceeds its applicable tolerance.
+
+The seed includes historical references before 2021; coverage is not limited to 2021–2025. The four `known_gap` entries remain documented exceptions rather than passing checks.
+
+Drives in certification testing that Backblaze excludes are not identifiable from the public data. The current reconciliation results do not establish whether such drives are present in the public files.
+
+A quarter with blocked days is marked provisional. The current run has zero blocked days.
