@@ -2,8 +2,6 @@
 
 **A production-style batch data platform on AWS that turns 13 years of Backblaze hard drive telemetry (744 million drive-days) into tested, reconciled reliability marts and point-in-time-correct ML tables. It runs daily with no manual steps.**
 
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen?logo=githubactions&logoColor=white)](https://github.com/PRANAV-ADITYA/backblaze-drive-stats-platform/actions/workflows/ci.yml)
-
 <p align="center">
   <strong>AWS services</strong><br/>
   <img src="https://raw.githubusercontent.com/icacho-dev/aws-architecture-icons/main/Architecture-Service-Icons_02072025/Arch_Analytics/48/Arch_AWS-Glue_48.svg" alt="AWS Glue" height="44" title="AWS Glue"/>
@@ -17,12 +15,11 @@
 
 <p align="center">
   <strong>Data &amp; engineering</strong><br/>
-  <img src="https://cdn.simpleicons.org/apacheiceberg/2684FF" alt="Apache Iceberg" height="36" title="Apache Iceberg"/>
-  <img src="https://cdn.simpleicons.org/apachespark/E25A1C" alt="Apache Spark" height="36" title="Apache Spark / PySpark"/>
-  <img src="https://cdn.simpleicons.org/dbt/FF694B" alt="dbt" height="36" title="dbt"/>
-  <img src="https://cdn.simpleicons.org/terraform/844FBA" alt="Terraform" height="36" title="Terraform"/>
+  <img src="https://img.shields.io/badge/Apache_Iceberg-lakehouse-2684FF?style=for-the-badge" alt="Apache Iceberg" height="30" title="Apache Iceberg"/>&nbsp;&nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/apachespark/E25A1C" alt="Apache Spark" height="36" title="Apache Spark / PySpark"/>&nbsp;&nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/dbt-FF694B?style=for-the-badge&logo=dbt&logoColor=white" alt="dbt" height="30" title="dbt"/>&nbsp;&nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/terraform/844FBA" alt="Terraform" height="36" title="Terraform"/>&nbsp;&nbsp;&nbsp;
   <img src="https://cdn.simpleicons.org/python/3776AB" alt="Python" height="36" title="Python"/>
-  <img src="https://cdn.simpleicons.org/uv/DE5FE9" alt="uv" height="36" title="uv"/>
   <br/><sub>Apache Iceberg · PySpark · dbt · Terraform · Python · uv</sub>
 </p>
 
