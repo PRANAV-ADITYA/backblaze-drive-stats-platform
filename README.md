@@ -129,6 +129,8 @@ Deep dives: [full design document (PDF)](docs/Backblaze_Drive_Stats_Design.pdf),
 |---|---|
 | ![Pipeline run](docs/evidence/pipeline-gold.png) | ![Dashboard](docs/evidence/dashboard.jpg) |
 
+Gold lineage (dbt docs, with tests): [dbt-lineage.jpg](docs/evidence/dbt-lineage.jpg).
+
 Benchmarks: [before](docs/evidence/benchmark-before.md) and [after](docs/evidence/benchmark-after.md) the silver layout change.
 
 ## Repository layout
